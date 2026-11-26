@@ -1,0 +1,2441 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Science Workshop Lab: Mikroskop Sel & Bioplastik Edible Pack</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tab-panel {
+      display: none;
+      animation: fadeSlideIn 0.28s ease-out;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .word-cell {
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      transition: background-color 0.12s ease, transform 0.1s ease, color 0.12s ease;
+    }
+    .word-cell.selecting {
+      background-color: #0d9488 !important;
+      color: #ffffff !important;
+      transform: scale(1.06);
+    }
+    .word-cell.found {
+      background-color: #10b981;
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .draggable-chip {
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .draggable-chip.selected-chip {
+      border-color: #0d9488;
+      background-color: #f0fdfa;
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.25);
+      transform: translateY(-2px);
+    }
+    .drop-zone-active {
+      border-color: #0d9488 !important;
+      background-color: #f0fdfa !important;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #ffffff !important; }
+      .tab-panel { display: none !important; }
+      #panel-report { display: block !important; }
+      .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast-box" class="fixed bottom-5 right-5 z-50 pointer-events-none opacity-0 transition-all duration-300 transform translate-y-3 no-print">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 text-sm font-medium border border-slate-700">
+      <span id="toast-icon">✅</span>
+      <span id="toast-text">Tersimpan otomatis</span>
+    </div>
+  </div>
+
+  <!-- HEADER & IDENTITAS PRAKTIKAN -->
+  <header class="bg-gradient-to-r from-teal-900 via-emerald-900 to-slate-900 text-white shadow-md no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="flex items-start sm:items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0 text-2xl">
+            🔬
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-200 border border-teal-400/30">
+                Asesmen Digital HOTS SMP Kelas 7
+              </span>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-300/30">
+                C4 • C5 • C6
+              </span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight mt-1">
+              Science Workshop Lab: Pengamatan Sel Tumbuhan & Bioplastik Edible Pack
+            </h1>
+            <p class="text-xs sm:text-sm text-teal-100/80 mt-0.5">
+              Praktikum Mikroskopi Sel & Rekayasa Kemasan Ramah Lingkungan Berbasis Korektor Otomatis
+            </p>
+          </div>
+        </div>
+
+        <!-- LIVE SCORE & PROGRESS BADGE -->
+        <div class="flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl p-3 self-start lg:self-auto">
+          <div class="text-right">
+            <div class="text-[11px] uppercase tracking-wider text-teal-200 font-semibold">Skor Otomatis</div>
+            <div class="text-2xl font-extrabold text-white leading-none mt-0.5">
+              <span id="header-total-score">0.0</span><span class="text-sm font-medium text-teal-200"> / 100</span>
+            </div>
+          </div>
+          <div class="h-9 w-px bg-white/20"></div>
+          <div>
+            <div class="text-[11px] uppercase tracking-wider text-teal-200 font-semibold">Progres</div>
+            <div class="flex items-center gap-2 mt-1">
+              <div class="w-20 sm:w-24 h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div id="header-progress-bar" class="h-full bg-emerald-400 transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <span id="header-progress-text" class="text-xs font-bold text-emerald-300">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORM IDENTITAS MURID + FILTER MODUL -->
+      <div class="mt-5 pt-4 border-t border-white/15 grid grid-cols-1 xl:grid-cols-12 gap-3 items-end">
+        <div class="xl:col-span-3">
+          <label for="student-name" class="block text-[11px] font-semibold uppercase tracking-wider text-teal-200 mb-1">Nama Lengkap Praktikan</label>
+          <input id="student-name" type="text" placeholder="Contoh: Raka Pratama"
+            class="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder-teal-200/50 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400" />
+        </div>
+        <div class="grid grid-cols-3 gap-2.5 xl:col-span-5">
+          <div>
+            <label for="student-class" class="block text-[11px] font-semibold uppercase tracking-wider text-teal-200 mb-1">Kelas</label>
+            <select id="student-class"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <option value="7A">7A</option>
+              <option value="7B">7B</option>
+              <option value="7C">7C</option>
+              <option value="7D">7D</option>
+              <option value="7E">7E</option>
+              <option value="7F">7F</option>
+            </select>
+          </div>
+          <div>
+            <label for="student-group" class="block text-[11px] font-semibold uppercase tracking-wider text-teal-200 mb-1">Kelompok</label>
+            <input id="student-group" type="text" placeholder="Kel. 1"
+              class="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder-teal-200/50 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400" />
+          </div>
+          <div>
+            <label for="student-role" class="block text-[11px] font-semibold uppercase tracking-wider text-teal-200 mb-1">Peran Workshop</label>
+            <select id="student-role"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <option value="Project Leader">Project Leader</option>
+              <option value="Practicum Operator">Practicum Operator</option>
+              <option value="Designer">Designer</option>
+              <option value="Notulen">Notulen</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- FILTER MODUL -->
+        <div class="xl:col-span-4">
+          <span class="block text-[11px] font-semibold uppercase tracking-wider text-teal-200 mb-1">Filter Fokus Modul</span>
+          <div class="grid grid-cols-3 gap-1.5 bg-slate-900/60 p-1 rounded-xl border border-white/15">
+            <button type="button" data-filter="all" onclick="setModuleFilter('all')"
+              class="filter-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition bg-teal-500 text-white shadow-sm">
+              Semua Materi
+            </button>
+            <button type="button" data-filter="microscope" onclick="setModuleFilter('microscope')"
+              class="filter-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold text-teal-100 hover:bg-white/10 transition">
+              🔬 Mikroskop Sel
+            </button>
+            <button type="button" data-filter="bioplastic" onclick="setModuleFilter('bioplastic')"
+              class="filter-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold text-teal-100 hover:bg-white/10 transition">
+              🌱 Bioplastik
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGASI 5 TAB INTERAKTIF -->
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex overflow-x-auto gap-1.5 py-2.5 no-scrollbar">
+        <button type="button" onclick="switchTab('level1')" id="tab-btn-level1"
+          class="nav-tab flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition bg-teal-600 text-white shadow-sm">
+          <span>1️⃣</span>
+          <span>Level 1: Pilihan Ganda</span>
+          <span id="badge-l1" class="px-2 py-0.5 rounded-full text-[11px] bg-white/20 text-white">0/30</span>
+        </button>
+        <button type="button" onclick="switchTab('level2')" id="tab-btn-level2"
+          class="nav-tab flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition text-slate-600 hover:bg-slate-100">
+          <span>2️⃣</span>
+          <span>Level 2: Drag & Drop Lab</span>
+          <span id="badge-l2" class="px-2 py-0.5 rounded-full text-[11px] bg-slate-200 text-slate-700">0/25</span>
+        </button>
+        <button type="button" onclick="switchTab('level3')" id="tab-btn-level3"
+          class="nav-tab flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition text-slate-600 hover:bg-slate-100">
+          <span>3️⃣</span>
+          <span>Level 3: Cari Kata 14×14</span>
+          <span id="badge-l3" class="px-2 py-0.5 rounded-full text-[11px] bg-slate-200 text-slate-700">0/15</span>
+        </button>
+        <button type="button" onclick="switchTab('level4')" id="tab-btn-level4"
+          class="nav-tab flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition text-slate-600 hover:bg-slate-100">
+          <span>4️⃣</span>
+          <span>Level 4: Esai & Kreasi SOP</span>
+          <span id="badge-l4" class="px-2 py-0.5 rounded-full text-[11px] bg-slate-200 text-slate-700">0/30</span>
+        </button>
+        <button type="button" onclick="switchTab('report')" id="tab-btn-report"
+          class="nav-tab flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition text-slate-600 hover:bg-slate-100">
+          <span>🏆</span>
+          <span>Rapor & Nilai Akhir</span>
+          <span id="badge-total" class="px-2 py-0.5 rounded-full text-[11px] bg-amber-100 text-amber-800 font-bold">0.0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- =================================================================== -->
+    <!-- PANEL LEVEL 1: PILIHAN GANDA HOTS (30 POIN)                         -->
+    <!-- =================================================================== -->
+    <section id="panel-level1" class="tab-panel active">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-teal-700 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-full">
+            Level 1 • Analisis & Evaluasi (C4–C5) • Bobot 30 Poin
+          </span>
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-2">
+            Pilihan Ganda HOTS Berbasis Stimulus Ilmiah
+          </h2>
+          <p class="text-sm text-slate-600 mt-0.5">
+            Amati diagram mikroskop dan skema rekayasa bioplastik dengan cermat sebelum memilih jawaban. Pembahasan muncul otomatis setelah jawaban dikunci.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" onclick="resetLevel1()"
+            class="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+            🔄 Ulangi Level 1
+          </button>
+        </div>
+      </div>
+
+      <!-- CONTAINER SOAL PILIHAN GANDA -->
+      <div id="mcq-container" class="space-y-6"></div>
+
+      <!-- KARTU NILAI AKHIR LEVEL 1 -->
+      <div id="level1-summary-card" class="mt-8 bg-gradient-to-br from-teal-900 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-teal-700/40">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-teal-300">Kartu Nilai Akhir Level 1</span>
+            <h3 class="text-xl font-extrabold mt-1">Rekapitulasi Pilihan Ganda HOTS</h3>
+            <p id="l1-status-text" class="text-sm text-teal-100/80 mt-1">
+              Jawab seluruh 12 soal untuk melihat capaian akhir Level 1.
+            </p>
+          </div>
+          <div class="flex items-center gap-4 bg-white/10 rounded-2xl p-4 border border-white/15">
+            <div>
+              <div class="text-xs text-teal-200">Jawaban Benar</div>
+              <div class="text-xl font-extrabold"><span id="l1-correct-count">0</span> / <span id="l1-total-count">12</span></div>
+            </div>
+            <div class="h-10 w-px bg-white/20"></div>
+            <div>
+              <div class="text-xs text-teal-200">Skor Level 1</div>
+              <div class="text-2xl font-extrabold text-emerald-300"><span id="l1-score-display">0.0</span> <span class="text-xs text-white/70">/ 30</span></div>
+            </div>
+            <button type="button" onclick="switchTab('level2')"
+              class="ml-2 px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs sm:text-sm transition">
+              Lanjut Level 2 →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- PANEL LEVEL 2: DRAG & DROP / TAP LAB (25 POIN)                      -->
+    <!-- =================================================================== -->
+    <section id="panel-level2" class="tab-panel">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-full">
+            Level 2 • Klasifikasi & Prosedur Lab (C4) • Bobot 25 Poin
+          </span>
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-2">
+            Drag & Drop / Tap-to-Move Laboratorium
+          </h2>
+          <p class="text-sm text-slate-600 mt-0.5">
+            Seret kartu ke zona tujuan <strong>atau</strong> ketuk kartu lalu ketuk zona tujuan (ramah layar sentuh HP/tablet).
+          </p>
+        </div>
+        <button type="button" onclick="resetLevel2()"
+          class="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition self-start sm:self-auto">
+          🔄 Reset Level 2
+        </button>
+      </div>
+
+      <!-- BAGIAN A: KLASIFIKASI 12 KARTU KE 4 ZONA (15 POIN) -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900">
+              Bagian A: Klasifikasi Ciri Mikroskopis, Bioplastik & Artefak (15 Poin)
+            </h3>
+            <p class="text-xs sm:text-sm text-slate-500">
+              Kelompokkan 12 kartu pengamatan berikut ke dalam 4 zona kategori yang paling sesuai.
+            </p>
+          </div>
+          <span id="dnd-pool-counter" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+            Sisa di Bank Kartu: 12
+          </span>
+        </div>
+
+        <!-- BANK KARTU -->
+        <div id="dnd-source-pool" ondragover="allowDrop(event)" ondrop="dropToPool(event)"
+          class="min-h-[84px] p-3.5 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-300 flex flex-wrap gap-2 mb-5">
+        </div>
+
+        <!-- 4 ZONA TARGET -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div data-zone="onion" onclick="handleZoneTap('onion')" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToZone(event, 'onion')"
+            class="drop-zone rounded-2xl border-2 border-amber-200 bg-amber-50/40 p-4 min-h-[165px] cursor-pointer transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-sm text-amber-900">🧅 Zona 1: Epidermis Bawang Merah</span>
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Allium cepa</span>
+            </div>
+            <p class="text-xs text-amber-800/75 mb-3">Ketuk di sini untuk menaruh kartu terpilih</p>
+            <div id="zone-items-onion" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <div data-zone="adamhawa" onclick="handleZoneTap('adamhawa')" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToZone(event, 'adamhawa')"
+            class="drop-zone rounded-2xl border-2 border-purple-200 bg-purple-50/40 p-4 min-h-[165px] cursor-pointer transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-sm text-purple-900">🌿 Zona 2: Daun Adam Hawa</span>
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">Tradescantia</span>
+            </div>
+            <p class="text-xs text-purple-800/75 mb-3">Ketuk di sini untuk menaruh kartu terpilih</p>
+            <div id="zone-items-adamhawa" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <div data-zone="bioplastic" onclick="handleZoneTap('bioplastic')" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToZone(event, 'bioplastic')"
+            class="drop-zone rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-4 min-h-[165px] cursor-pointer transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-sm text-emerald-900">🥤 Zona 3: Bioplastik & Edible Pack</span>
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Biopolimer</span>
+            </div>
+            <p class="text-xs text-emerald-800/75 mb-3">Ketuk di sini untuk menaruh kartu terpilih</p>
+            <div id="zone-items-bioplastic" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <div data-zone="artifact" onclick="handleZoneTap('artifact')" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropToZone(event, 'artifact')"
+            class="drop-zone rounded-2xl border-2 border-rose-200 bg-rose-50/40 p-4 min-h-[165px] cursor-pointer transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-sm text-rose-900">⚠️ Zona 4: Artefak / Kesalahan Lab</span>
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">Troubleshooting</span>
+            </div>
+            <p class="text-xs text-rose-800/75 mb-3">Ketuk di sini untuk menaruh kartu terpilih</p>
+            <div id="zone-items-artifact" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BAGIAN B: PENGURUTAN 5 LANGKAH PEMBUATAN & UJI EDIBLE BIOPLASTIC (10 POIN) -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm mb-6">
+        <h3 class="text-base sm:text-lg font-bold text-slate-900">
+          Bagian B: Urutkan 5 Tahap Pembuatan & Pengujian Ketahanan Air Edible Bioplastic (10 Poin)
+        </h3>
+        <p class="text-xs sm:text-sm text-slate-500 mt-0.5 mb-4">
+          Susun langkah dari tahap <strong>1 (awal)</strong> hingga <strong>5 (akhir)</strong> dengan menyeret baris atau menekan tombol panah <strong>▲ / ▼</strong>.
+        </p>
+
+        <div id="sequence-list" class="space-y-2.5"></div>
+
+        <div class="mt-6 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
+          <p class="text-xs text-slate-500">Pastikan seluruh 12 kartu di Bagian A sudah masuk zona sebelum mengoreksi.</p>
+          <button type="button" onclick="gradeLevel2()"
+            class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-sm transition">
+            ✅ Koreksi Otomatis Level 2
+          </button>
+        </div>
+      </div>
+
+      <!-- KARTU NILAI AKHIR LEVEL 2 -->
+      <div id="level2-summary-card" class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-indigo-700/40">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-300">Kartu Nilai Akhir Level 2</span>
+            <h3 class="text-xl font-extrabold mt-1">Hasil Klasifikasi & Urutan Prosedur Lab</h3>
+            <p id="l2-feedback-text" class="text-sm text-indigo-100/80 mt-1">
+              Tekan tombol "Koreksi Otomatis Level 2" untuk menilai penempatan kartu dan urutan langkah.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-4 bg-white/10 rounded-2xl p-4 border border-white/15">
+            <div>
+              <div class="text-xs text-indigo-200">Bagian A (Zona)</div>
+              <div class="text-lg font-extrabold"><span id="l2-part-a">0.0</span> / 15</div>
+            </div>
+            <div class="h-9 w-px bg-white/20"></div>
+            <div>
+              <div class="text-xs text-indigo-200">Bagian B (Urutan)</div>
+              <div class="text-lg font-extrabold"><span id="l2-part-b">0.0</span> / 10</div>
+            </div>
+            <div class="h-9 w-px bg-white/20"></div>
+            <div>
+              <div class="text-xs text-indigo-200">Skor Level 2</div>
+              <div class="text-2xl font-extrabold text-emerald-300"><span id="l2-score-display">0.0</span> <span class="text-xs text-white/70">/ 25</span></div>
+            </div>
+            <button type="button" onclick="switchTab('level3')"
+              class="px-4 py-2.5 rounded-xl bg-indigo-400 hover:bg-indigo-300 text-slate-950 font-bold text-xs sm:text-sm transition">
+              Lanjut Level 3 →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- PANEL LEVEL 3: CARI KATA ILMIAH 14x14 (15 POIN)                     -->
+    <!-- =================================================================== -->
+    <section id="panel-level3" class="tab-panel">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+            Level 3 • Literasi Terminologi Ilmiah • Bobot 15 Poin
+          </span>
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-2">
+            Teka-Teki Cari Kata Ilmiah 14×14
+          </h2>
+          <p class="text-sm text-slate-600 mt-0.5">
+            Seret huruf (mendatar, menurun, atau diagonal) untuk menemukan <strong>12 istilah kunci</strong> mikroskopi sel dan bioplastik. Setiap kata membuka kartu Fakta Laboratorium.
+          </p>
+        </div>
+        <button type="button" onclick="resetLevel3()"
+          class="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition self-start sm:self-auto">
+          🔄 Acak Ulang Grid
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+        <!-- GRID 14x14 -->
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm flex flex-col items-center">
+          <div class="w-full flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Papan Huruf 14 × 14</span>
+            <span id="ws-selection-preview" class="text-xs font-extrabold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-lg min-h-[24px]">
+              Seret huruf pada kotak...
+            </span>
+          </div>
+          <div id="wordsearch-grid"
+            class="grid grid-cols-14 gap-1 w-full max-w-[500px] aspect-square bg-slate-100 p-2 rounded-2xl border border-slate-200"
+            style="grid-template-columns: repeat(14, minmax(0, 1fr));">
+          </div>
+        </div>
+
+        <!-- DAFTAR 12 KATA & FAKTA LABORATORIUM -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">Daftar 12 Istilah Kunci</h3>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                <span id="ws-found-count">0</span> / 12 Ditemukan
+              </span>
+            </div>
+            <div id="ws-word-list" class="grid grid-cols-2 gap-2"></div>
+          </div>
+
+          <!-- KARTU FAKTA LABORATORIUM -->
+          <div id="ws-fact-card" class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 p-5 shadow-sm">
+            <div class="flex items-center gap-2 text-emerald-800 font-bold text-sm">
+              <span>💡</span>
+              <span id="ws-fact-title">Kartu Fakta Laboratorium</span>
+            </div>
+            <p id="ws-fact-body" class="text-xs sm:text-sm text-slate-700 mt-2 leading-relaxed">
+              Temukan salah satu istilah pada papan huruf 14×14 di samping untuk membuka penjelasan konsep dan penerapannya di laboratorium!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- KARTU NILAI AKHIR LEVEL 3 -->
+      <div class="bg-gradient-to-br from-emerald-900 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-emerald-700/40">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-300">Kartu Nilai Akhir Level 3</span>
+            <h3 class="text-xl font-extrabold mt-1">Capaian Literasi Istilah Praktikum</h3>
+            <p class="text-sm text-emerald-100/80 mt-1">
+              Setiap istilah bernilai 1,25 poin (12 × 1,25 = 15 poin penuh).
+            </p>
+          </div>
+          <div class="flex items-center gap-4 bg-white/10 rounded-2xl p-4 border border-white/15">
+            <div>
+              <div class="text-xs text-emerald-200">Istilah Terbuka</div>
+              <div class="text-xl font-extrabold"><span id="l3-found-display">0</span> / 12</div>
+            </div>
+            <div class="h-10 w-px bg-white/20"></div>
+            <div>
+              <div class="text-xs text-emerald-200">Skor Level 3</div>
+              <div class="text-2xl font-extrabold text-emerald-300"><span id="l3-score-display">0.0</span> <span class="text-xs text-white/70">/ 15</span></div>
+            </div>
+            <button type="button" onclick="switchTab('level4')"
+              class="ml-2 px-4 py-2.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs sm:text-sm transition">
+              Lanjut Level 4 →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- PANEL LEVEL 4: ESAI HOTS & KREASI SOP (30 POIN)                     -->
+    <!-- =================================================================== -->
+    <section id="panel-level4" class="tab-panel">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-full">
+            Level 4 • Analisis, Evaluasi & Kreasi (C4–C6) • Bobot 30 Poin
+          </span>
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-2">
+            Uraian HOTS & Kreasi SOP Edible Pack dengan Korektor Otomatis NLP
+          </h2>
+          <p class="text-sm text-slate-600 mt-0.5">
+            Tuliskan argumentasi ilmiahmu secara lengkap. Sistem Korektor Otomatis akan memindai kelengkapan indikator konsep dan menghitung skor Level 4 (maksimal 30 poin).
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" onclick="toggleTeacherRubric()"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 transition">
+            📖 Kunci Jawaban & Rubrik Guru
+          </button>
+          <button type="button" onclick="gradeLevel4(true)"
+            class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-sm transition">
+            🤖 Koreksi Otomatis Level 4
+          </button>
+        </div>
+      </div>
+
+      <!-- CONTAINER 4 SOAL URAIAN -->
+      <div id="essay-container" class="space-y-6"></div>
+
+      <!-- PANEL RUBRIK & KUNCI JAWABAN GURU (COLLAPSIBLE) -->
+      <div id="teacher-rubric-box" class="hidden mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base sm:text-lg font-extrabold text-amber-950">📖 Pedoman Kunci Jawaban & Rubrik Penskoran Guru (Soal No. 13–16)</h3>
+          <button type="button" onclick="toggleTeacherRubric()" class="text-xs font-bold text-amber-800 underline">Tutup</button>
+        </div>
+        <div id="teacher-rubric-content" class="space-y-4 text-xs sm:text-sm text-slate-800"></div>
+      </div>
+
+      <!-- KARTU NILAI AKHIR LEVEL 4 -->
+      <div class="mt-8 bg-gradient-to-br from-purple-900 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-purple-700/40">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-purple-300">Kartu Nilai Akhir Level 4</span>
+            <h3 class="text-xl font-extrabold mt-1">Hasil Evaluasi Uraian HOTS & Kreasi SOP</h3>
+            <p id="l4-status-text" class="text-sm text-purple-100/80 mt-1">
+              Klik "Koreksi Otomatis Level 4" untuk memverifikasi kelengkapan indikator konsep pada seluruh jawaban uraian.
+            </p>
+          </div>
+          <div class="flex items-center gap-4 bg-white/10 rounded-2xl p-4 border border-white/15">
+            <div>
+              <div class="text-xs text-purple-200">Indikator Terpenuhi</div>
+              <div class="text-xl font-extrabold"><span id="l4-indicators-met">0</span> / <span id="l4-indicators-total">14</span></div>
+            </div>
+            <div class="h-10 w-px bg-white/20"></div>
+            <div>
+              <div class="text-xs text-purple-200">Skor Level 4</div>
+              <div class="text-2xl font-extrabold text-emerald-300"><span id="l4-score-display">0.0</span> <span class="text-xs text-white/70">/ 30</span></div>
+            </div>
+            <button type="button" onclick="switchTab('report')"
+              class="ml-2 px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm transition">
+              Lihat Rapor Akhir 🏆
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- PANEL RAPOR & NILAI AKHIR OTOMATIS (0-100 POIN)                     -->
+    <!-- =================================================================== -->
+    <section id="panel-report" class="tab-panel">
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- HEADER RAPOR -->
+        <div class="bg-gradient-to-r from-slate-900 via-teal-900 to-emerald-900 text-white p-6 sm:p-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-white/15 text-teal-200">
+                Rapor & Nilai Akhir Otomatis • Science Workshop Kelas 7
+              </span>
+              <h2 class="text-2xl sm:text-3xl font-extrabold mt-2">
+                Laporan Capaian Kompetensi Praktikum
+              </h2>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 text-xs sm:text-sm">
+                <div class="bg-white/10 rounded-xl p-2.5">
+                  <div class="text-teal-200 text-[11px]">Nama Praktikan</div>
+                  <div id="rep-name" class="font-bold truncate">-</div>
+                </div>
+                <div class="bg-white/10 rounded-xl p-2.5">
+                  <div class="text-teal-200 text-[11px]">Kelas</div>
+                  <div id="rep-class" class="font-bold">7A</div>
+                </div>
+                <div class="bg-white/10 rounded-xl p-2.5">
+                  <div class="text-teal-200 text-[11px]">Kelompok</div>
+                  <div id="rep-group" class="font-bold">-</div>
+                </div>
+                <div class="bg-white/10 rounded-xl p-2.5">
+                  <div class="text-teal-200 text-[11px]">Peran Workshop</div>
+                  <div id="rep-role" class="font-bold">Project Leader</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SKOR & PREDIKAT HURUF -->
+            <div class="bg-white text-slate-900 rounded-2xl p-5 flex items-center gap-5 shrink-0 shadow-lg">
+              <div id="rep-grade-badge" class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center text-3xl font-black border-2 border-slate-200">
+                D
+              </div>
+              <div>
+                <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Nilai Akhir Total</div>
+                <div class="text-3xl font-black text-slate-900 leading-tight">
+                  <span id="rep-grand-total">0.0</span><span class="text-base font-semibold text-slate-400"> / 100</span>
+                </div>
+                <div id="rep-grade-label" class="text-xs font-bold text-teal-700 mt-0.5">Perlu Pendampingan</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BODY RAPOR: GRAFIK PER LEVEL & PER MODUL -->
+        <div class="p-6 sm:p-8 space-y-8">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- RINCIAN PER LEVEL -->
+            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-5">
+              <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-800 mb-4">
+                Rincian Skor per Level Asesmen (Total 100 Poin)
+              </h3>
+              <div class="space-y-4">
+                <div>
+                  <div class="flex justify-between text-xs font-bold mb-1">
+                    <span class="text-slate-700">Level 1: Pilihan Ganda HOTS (C4–C5)</span>
+                    <span class="text-teal-700"><span id="rep-l1-val">0.0</span> / 30</span>
+                  </div>
+                  <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div id="rep-l1-bar" class="h-full bg-teal-600 transition-all duration-500" style="width: 0%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs font-bold mb-1">
+                    <span class="text-slate-700">Level 2: Drag & Drop / Tap Lab (C4)</span>
+                    <span class="text-indigo-700"><span id="rep-l2-val">0.0</span> / 25</span>
+                  </div>
+                  <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div id="rep-l2-bar" class="h-full bg-indigo-600 transition-all duration-500" style="width: 0%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs font-bold mb-1">
+                    <span class="text-slate-700">Level 3: Cari Kata Ilmiah 14×14</span>
+                    <span class="text-emerald-700"><span id="rep-l3-val">0.0</span> / 15</span>
+                  </div>
+                  <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div id="rep-l3-bar" class="h-full bg-emerald-600 transition-all duration-500" style="width: 0%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs font-bold mb-1">
+                    <span class="text-slate-700">Level 4: Esai HOTS & Kreasi SOP (C4–C6)</span>
+                    <span class="text-purple-700"><span id="rep-l4-val">0.0</span> / 30</span>
+                  </div>
+                  <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div id="rep-l4-bar" class="h-full bg-purple-600 transition-all duration-500" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CAPAIAN PER MODUL PRAKTIKUM -->
+            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-5 flex flex-col justify-between">
+              <div>
+                <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-800 mb-4">
+                  Capaian Berdasarkan Modul Praktikum (50 : 50)
+                </h3>
+                <div class="space-y-4">
+                  <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                      <span class="text-slate-700">🔬 Modul A: Pengamatan Sel Tumbuhan (Mikroskop)</span>
+                      <span class="text-amber-700"><span id="rep-mod-micro">0.0</span> / 50</span>
+                    </div>
+                    <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                      <div id="rep-mod-micro-bar" class="h-full bg-amber-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                      <span class="text-slate-700">🌱 Modul B: Workshop Bioplastik & Edible Pack</span>
+                      <span class="text-emerald-700"><span id="rep-mod-bio">0.0</span> / 50</span>
+                    </div>
+                    <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                      <div id="rep-mod-bio-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="rep-diagnostic-box" class="mt-5 p-4 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                Selesaikan seluruh aktivitas pada Level 1 hingga Level 4 untuk memperoleh rekomendasi diagnostik kompetensi HOTS secara lengkap.
+              </div>
+            </div>
+          </div>
+
+          <!-- TOMBOL AKSI RAPOR -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200 no-print">
+            <button type="button" onclick="resetAllData()"
+              class="px-4 py-2.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition">
+              🗑️ Reset Seluruh Data Ujian
+            </button>
+            <div class="flex flex-wrap gap-2.5">
+              <button type="button" onclick="copyReportSummary()"
+                class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition">
+                📋 Salin Laporan Hasil ke Clipboard
+              </button>
+              <button type="button" onclick="window.print()"
+                class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 shadow-sm transition">
+                🖨️ Cetak Rapor PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 no-print">
+    Science Workshop Lab • SMP Kelas 7 • Pengamatan Sel Tumbuhan Menggunakan Mikroskop & Rekayasa Bioplastik Edible Pack
+  </footer>
+
+  <script>
+    // =========================================================================
+    // 1. BANK SOAL LEVEL 1: 12 PILIHAN GANDA HOTS (C4-C5)
+    // Kunci Jawaban Merata: A (No. 2, 5, 9), B (No. 4, 8, 11), C (No. 1, 7, 12), D (No. 3, 6, 10)
+    // =========================================================================
+    const MCQ_DATA = [
+      {
+        id: 1,
+        module: 'microscope',
+        moduleLabel: '🔬 Mikroskop Sel',
+        level: 'C4 – Menganalisis',
+        stimulusType: 'onion',
+        question: 'Seorang murid mengamati epidermis dalam umbi bawang merah menggunakan mikroskop. Ia menemukan susunan sel berbentuk persegi panjang yang tersusun rapat seperti batu bata dengan batas antar-sel yang sangat tegas. Kesimpulan ilmiah paling tepat berdasarkan bukti pengamatan tersebut adalah ...',
+        options: [
+          'Sel bawang merah tidak memiliki membran sel sehingga bentuknya kaku.',
+          'Semua sel tumbuhan memiliki bentuk yang selalu sama seperti batu bata.',
+          'Sel tumbuhan memiliki dinding sel selulosa yang kaku untuk mempertahankan bentuknya.',
+          'Sel bawang merah tidak memiliki inti sel.'
+        ],
+        correct: 2, // C
+        explanation: 'Kunci C: Susunan sel berbentuk persegi panjang yang tegas dan tetap seperti batu bata pada sel tumbuhan disebabkan oleh dinding sel selulosa yang kaku sehingga mampu mempertahankan bentuk sel.'
+      },
+      {
+        id: 2,
+        module: 'microscope',
+        moduleLabel: '🔬 Mikroskop Sel',
+        level: 'C4 – Menganalisis',
+        stimulusType: 'adamhawa',
+        question: 'Dua kelompok mengamati objek berbeda tanpa pewarna tambahan. Kelompok A mengamati epidermis bawang merah dan melihat sel memanjang bening, sedangkan Kelompok B mengamati epidermis bawah daun Adam Hawa dan menemukan sel segi enam berwarna ungu kemerahan dengan celah stomata. Faktor biologis utama penyebab perbedaan hasil pengamatan adalah ...',
+        options: [
+          'Setiap jaringan tumbuhan memiliki karakteristik spesialisasi, pigmen (antosianin), dan fungsi yang berbeda.',
+          'Semua sel tumbuhan memiliki struktur yang berbeda secara keseluruhan.',
+          'Mikroskop cahaya hanya dapat menangkap warna pada bawang merah.',
+          'Daun Adam Hawa tidak tersusun atas sel hidup.'
+        ],
+        correct: 0, // A
+        explanation: 'Kunci A: Setiap jaringan tumbuhan mengalami spesialisasi sesuai fungsinya. Epidermis bawah daun Adam Hawa memiliki pigmen antosianin ungu kemerahan serta stomata untuk pertukaran gas.'
+      },
+      {
+        id: 3,
+        module: 'microscope',
+        moduleLabel: '🔬 Mikroskop Sel',
+        level: 'C4 – Menganalisis',
+        stimulusType: 'microscope_lens',
+        question: 'Saat memulai pengamatan, seorang murid langsung memutar revolver ke lensa objektif perbesaran tinggi (40x). Akibatnya, bidang pandang tampak gelap total dan ujung lensa hampir menyentuh kaca penutup. Langkah perbaikan paling aman dan tepat adalah ...',
+        options: [
+          'Mengganti objek dengan potongan yang jauh lebih tebal.',
+          'Menjauhkan mata dari lensa okuler dan memutar makrometer ke bawah secara cepat.',
+          'Mengurangi jumlah cahaya diafragma hingga objek tidak terlihat.',
+          'Mengembalikan ke lensa objektif perbesaran lemah (4x/10x), menurunkan meja preparat, lalu mencari fokus dari awal.'
+        ],
+        correct: 3, // D
+        explanation: 'Kunci D: Lensa objektif 40x memiliki jarak kerja sangat dekat dengan kaca penutup dan bidang pandang sempit. Pencarian fokus wajib dimulai dari perbesaran rendah (4x/10x) agar aman dari risiko memecahkan kaca preparat.'
+      },
+      {
+        id: 4,
+        module: 'microscope',
+        moduleLabel: '🔬 Mikroskop Sel',
+        level: 'C4 – Menganalisis',
+        stimulusType: 'bubbles',
+        question: 'Ketika mengamati preparat basah bawang merah, seorang murid melihat banyak lingkaran hitam tebal dengan bagian tengah transparan yang menutupi sel. Penyebab dan solusi yang tepat adalah ...',
+        options: [
+          'Preparat terlalu tebal, sehingga harus ditambahkan lebih banyak air di atas kaca penutup.',
+          'Terdapat gelembung udara akibat sudut peletakan kaca penutup yang kurang tepat; dicegah dengan meletakkan kaca penutup miring 45° secara perlahan.',
+          'Lensa objektif terlalu kecil, sehingga harus diganti lensa okuler.',
+          'Sel tumbuhan mengalami kerusakan alami karena terkena cahaya lampu.'
+        ],
+        correct: 1, // B
+        explanation: 'Kunci B: Lingkaran dengan tepi hitam tebal adalah gelembung udara yang terperangkap saat kaca penutup dijatuhkan rata, bukan dimiringkan 45° secara perlahan.'
+      },
+      {
+        id: 5,
+        module: 'microscope',
+        moduleLabel: '🔬 Mikroskop Sel',
+        level: 'C5 – Mengevaluasi',
+        stimulusType: 'chloroplast_eval',
+        question: 'Seorang murid menggambar hasil pengamatan sel epidermis bawang merah dengan menambahkan butiran hijau kloroplas yang sebenarnya tidak terlihat pada preparatnya. Penilaian paling tepat terhadap gambar tersebut adalah ...',
+        options: [
+          'Kurang tepat karena gambar pengamatan harus objektif sesuai struktur yang benar-benar tampak (dan umbi bawang merah memang tidak berkloroplas).',
+          'Benar karena semua sel tumbuhan pasti memiliki kloroplas.',
+          'Benar karena gambar laporan harus dibuat semenarik mungkin.',
+          'Salah karena sel bawang merah tidak memiliki struktur sel.'
+        ],
+        correct: 0, // A
+        explanation: 'Kunci A: Dokumentasi ilmiah menuntut objektivitas sesuai fakta yang terlihat di mikroskop. Selain itu, umbi lapis bawang merah berada di dalam tanah (tidak berfotosintesis) sehingga memang tidak mengandung kloroplas.'
+      },
+      {
+        id: 6,
+        module: 'microscope',
+        moduleLabel: '🔬 Mikroskop Sel',
+        level: 'C5 – Mengevaluasi',
+        stimulusType: 'video_control',
+        question: 'Kelompok A mengumpulkan video mikroskop jernih tanpa menyebut nama objek maupun perbesaran. Kelompok B mengumpulkan video sedikit kurang stabil, tetapi menjelaskan objek, total perbesaran (100x), dan skala pembanding dengan jelas. Jika dua kelompok ingin membandingkan ukuran sel secara objektif, evaluasi dan variabel kontrol yang wajib dipenuhi adalah ...',
+        options: [
+          'Kelompok A lebih baik; variabel yang dikendalikan adalah merek kamera ponsel.',
+          'Keduanya tidak memenuhi syarat karena ukuran sel tidak dipengaruhi angka perbesaran.',
+          'Kelompok A lebih baik karena kejernihan video otomatis menunjukkan ukuran sel sebenarnya.',
+          'Kelompok B lebih memenuhi kriteria dokumentasi ilmiah; variabel yang wajib dikendalikan adalah perbesaran mikroskop dan metode/skala pengukuran.'
+        ],
+        correct: 3, // D
+        explanation: 'Kunci D: Dokumentasi ilmiah wajib memuat identitas objek dan total perbesaran. Untuk membandingkan ukuran sel antar-kelompok secara adil, angka perbesaran mikroskop dan skala pengukuran harus dikendalikan sama.'
+      },
+      {
+        id: 7,
+        module: 'bioplastic',
+        moduleLabel: '🌱 Bioplastik & Edible Pack',
+        level: 'C4 – Menganalisis',
+        stimulusType: 'polymer_glycerol',
+        question: 'Pada pembuatan lembaran edible wrapper berbahan pati singkong (tapioka), Kelompok 1 tidak menambahkan gliserol sehingga lembaran menjadi kaku, rapuh, dan retak saat dilipat. Kelompok 2 menambahkan gliserol dan menghasilkan film yang elastis. Analisis mekanisme molekuler gliserol yang paling tepat adalah ...',
+        options: [
+          'Gliserol melarutkan seluruh pati singkong menjadi air murni sehingga tidak berbentuk padatan.',
+          'Gliserol berfungsi sebagai pemutih kimia untuk menghilangkan warna alami pati.',
+          'Gliserol menyisip di antara rantai biopolimer pati untuk mengurangi ikatan hidrogen antarmolekul sehingga meningkatkan elastisitas.',
+          'Gliserol mengeraskan ikatan hidrogen antar-rantai pati agar film menjadi lebih kaku seperti kaca.'
+        ],
+        correct: 2, // C
+        explanation: 'Kunci C: Gliserol berperan sebagai plasticizer yang menyisip di antara rantai biopolimer pati, melemahkan ikatan hidrogen antarmolekul, dan meningkatkan kelenturan film.'
+      },
+      {
+        id: 8,
+        module: 'bioplastic',
+        moduleLabel: '🌱 Bioplastik & Edible Pack',
+        level: 'C4 – Menganalisis',
+        stimulusType: 'cup_vs_wrapper',
+        question: 'Perhatikan perbandingan formulasi dua kelompok saat membuat Edible Cup (gelas yang dapat dimakan) dari agar-agar dan pati: Kelompok X menggunakan takaran gliserol sesuai standar, sedangkan Kelompok Y menuangkan gliserol secara berlebihan. Akibatnya, dinding edible cup Kelompok Y menjadi lembek, melengkung, dan mudah bocor saat diisi air. Mengapa hal tersebut terjadi?',
+        options: [
+          'Gliserol berlebih mengubah agar-agar menjadi kristal kaca yang keras dan tajam.',
+          'Rasio gliserol yang berlebihan melemahkan gaya tarik matriks biopolimer dan menarik kelembapan air sehingga struktur edible cup melengkung dan bocor.',
+          'Gliserol hanya dapat bereaksi jika dicampur dengan plastik sintetis PET.',
+          'Takaran gliserol berlebih menyebabkan seluruh air menguap seketika sebelum dicetak.'
+        ],
+        correct: 1, // B
+        explanation: 'Kunci B: Gliserol bersifat hidrofilik dan memperbesar jarak antar-rantai polimer. Jika takarannya berlebihan, kekokohan gel melemah sehingga dinding edible cup melengkung dan mudah rembes air.'
+      },
+      {
+        id: 9,
+        module: 'bioplastic',
+        moduleLabel: '🌱 Bioplastik & Edible Pack',
+        level: 'C5 – Mengevaluasi',
+        stimulusType: 'edible_straw',
+        question: 'Sebuah kelompok menguji prototipe edible straw (sedotan dari pati singkong dan agar-agar) pada minuman dingin. Hasilnya, sedotan mulai menyerap air dan melunak hanya dalam 3 menit. Rekayasa pelapisan alami food-grade paling tepat untuk meningkatkan ketahanan airnya tanpa menghilangkan sifat aman dimakan adalah ...',
+        options: [
+          'Pelapisan tipis lilin lebah murni (beeswax) food-grade untuk menciptakan lapisan hidrofobik penahan rembesan cairan.',
+          'Mencampurkan lem plastik PVC agar sedotan kedap air selama berjam-jam.',
+          'Mengurangi waktu pemanasan agar pati tidak mengalami gelatinisasi.',
+          'Merendam sedotan ke dalam larutan deterjen sebelum dikeringkan.'
+        ],
+        correct: 0, // A
+        explanation: 'Kunci A: Lapisan tipis lilin lebah murni (beeswax) yang aman dikonsumsi membentuk penghalang hidrofobik (tolak air) pada permukaan sedotan sehingga tidak cepat melunak.'
+      },
+      {
+        id: 10,
+        module: 'bioplastic',
+        moduleLabel: '🌱 Bioplastik & Edible Pack',
+        level: 'C4 – Menganalisis',
+        stimulusType: 'degradation_chart',
+        question: 'Perhatikan perbandingan tiga jenis kemasan setelah 30 hari di tanah lembap: Plastik Konvensional (PET) utuh 100%, Plastik Oxo-degradable hancur menjadi serpihan mikroplastik, sedangkan Bioplastik Pati-Agar terurai >95%. Analisis keunggulan ekologis bioplastik pati-agar yang paling akurat adalah ...',
+        options: [
+          'Plastik oxo-degradable sama ramahnya dengan bioplastik karena sama-sama hancur secara fisik.',
+          'Bioplastik hanya dapat terurai jika dibakar pada suhu di atas 500°C.',
+          'Plastik PET paling unggul karena dapat dikonsumsi cacing tanah dalam waktu 1 minggu.',
+          'Bioplastik pati terurai hayati (biodegradable) oleh mikroorganisme menjadi CO2, air, dan biomassa tanpa meninggalkan residu mikroplastik.'
+        ],
+        correct: 3, // D
+        explanation: 'Kunci D: Bioplastik berbasis biopolimer alami diuraikan tuntas oleh mikroba tanah menjadi CO2, air, dan biomassa tanpa menghasilkan mikroplastik berbahaya.'
+      },
+      {
+        id: 11,
+        module: 'bioplastic',
+        moduleLabel: '🌱 Bioplastik & Edible Pack',
+        level: 'C5 – Mengevaluasi',
+        stimulusType: 'food_safety',
+        question: 'Agar edible spoon (sendok yang bisa dimakan) terasa lebih kenyal dan tidak mudah patah saat menyendok puding, seorang murid mengusulkan penambahan sedikit boraks ke dalam adonan pati. Keputusan evaluatif dan solusi ilmiah paling tepat terhadap usulan tersebut adalah ...',
+        options: [
+          'Menyetujui penambahan boraks asalkan takarannya kurang dari setengah sendok teh.',
+          'Menolak penggunaan boraks karena bersifat toksik (non food-grade), dan menggantinya dengan penguat alami food-grade seperti agar-agar atau karagenan.',
+          'Menyetujui boraks karena pemanasan tinggi akan mengubah boraks menjadi vitamin.',
+          'Menolak boraks hanya karena membuat warna sendok menjadi terlalu putih.'
+        ],
+        correct: 1, // B
+        explanation: 'Kunci B: Produk edible pack wajib memenuhi standar keamanan pangan (food-grade). Boraks bersifat racun sehingga harus diganti hidrokoloid alami seperti agar-agar atau karagenan.'
+      },
+      {
+        id: 12,
+        module: 'bioplastic',
+        moduleLabel: '🌱 Bioplastik & Edible Pack',
+        level: 'C5 – Mengevaluasi',
+        stimulusType: 'fair_test_cup',
+        question: 'Sebuah tim merancang edible wrapper (pembungkus bumbu mi instan) untuk menggantikan saset plastik sekali pakai. Agar produknya terbukti layak edar sebelum dipasarkan, parameter pengujian kontrol mutu terpenting yang wajib dilakukan tim tersebut adalah ...',
+        options: [
+          'Hanya mengukur kecerahan warna kemasan di bawah lampu neon tanpa uji kontak makanan.',
+          'Menguji kekuatan kemasan dengan cara membakarnya di atas api bunsen selama 10 menit.',
+          'Menguji ketahanan terhadap suhu hangat dan kuah berminyak serta menguji ketahanan simpan kering agar bebas pertumbuhan jamur.',
+          'Membandingkan ketahanan wadah dengan variabel suhu air berbeda (10°C vs 60°C) pada masing-masing sampel.'
+        ],
+        correct: 2, // C
+        explanation: 'Kunci C: Edible wrapper bumbu mi instan akan bersentuhan dengan air hangat/minyak saat diseduh dan disimpan kering sebelum dipakai, sehingga uji suhu hangat, ketahanan minyak, dan bebas jamur wajib dilakukan.'
+      }
+    ];
+
+    // =========================================================================
+    // 2. ILUSTRASI SVG ILMIAH UNTUK SETIAP SOAL PILIHAN GANDA
+    // =========================================================================
+    function renderStimulusSVG(type) {
+      const svgs = {
+        onion: `
+          <svg viewBox="0 0 360 135" class="w-full max-w-md h-auto mx-auto rounded-xl bg-amber-50/70 border border-amber-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#78350f">Simulasi Pandangan Mikroskop (100x): Epidermis Bawang Merah</text>
+            <g stroke="#b45309" stroke-width="2" fill="#fef3c7">
+              <rect x="25" y="26" width="102" height="30" rx="2"/><rect x="127" y="26" width="104" height="30" rx="2"/><rect x="231" y="26" width="104" height="30" rx="2"/>
+              <rect x="25" y="56" width="75" height="30" rx="2"/><rect x="100" y="56" width="115" height="30" rx="2"/><rect x="215" y="56" width="120" height="30" rx="2"/>
+              <rect x="25" y="86" width="110" height="30" rx="2"/><rect x="135" y="86" width="95" height="30" rx="2"/><rect x="230" y="86" width="105" height="30" rx="2"/>
+            </g>
+            <g fill="#92400e">
+              <circle cx="76" cy="41" r="4.5"/><circle cx="179" cy="41" r="4.5"/><circle cx="283" cy="41" r="4.5"/>
+              <circle cx="62" cy="71" r="4.5"/><circle cx="158" cy="71" r="4.5"/><circle cx="275" cy="71" r="4.5"/>
+              <circle cx="80" cy="101" r="4.5"/><circle cx="182" cy="101" r="4.5"/><circle cx="282" cy="101" r="4.5"/>
+            </g>
+            <text x="180" y="129" text-anchor="middle" font-size="9" fill="#92400e">Susunan rapat berbentuk persegi panjang dengan batas dinding tegas & inti sel</text>
+          </svg>`,
+        adamhawa: `
+          <svg viewBox="0 0 360 135" class="w-full max-w-md h-auto mx-auto rounded-xl bg-purple-50/70 border border-purple-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#581c87">Epidermis Bawah Daun Adam Hawa (Tradescantia spathacea)</text>
+            <g stroke="#6b21a8" stroke-width="1.8" fill="#e9d5ff">
+              <polygon points="45,28 85,28 100,52 85,76 45,76 30,52"/>
+              <polygon points="85,28 130,28 145,52 130,76 85,76 100,52"/>
+              <polygon points="215,28 260,28 275,52 260,76 215,76 200,52"/>
+              <polygon points="260,28 305,28 320,52 305,76 260,76 275,52"/>
+              <polygon points="65,76 110,76 125,100 110,120 65,120 50,100"/>
+              <polygon points="235,76 280,76 295,100 280,120 235,120 220,100"/>
+            </g>
+            <!-- Stomata di tengah -->
+            <ellipse cx="172" cy="68" rx="26" ry="18" fill="#bbf7d0" stroke="#15803d" stroke-width="2"/>
+            <ellipse cx="172" cy="68" rx="9" ry="4" fill="#14532d"/>
+            <text x="172" y="102" text-anchor="middle" font-size="9" font-weight="700" fill="#166534">Stomata & Sel Penjaga</text>
+            <text x="65" y="55" text-anchor="middle" font-size="8.5" fill="#581c87">Pigmen Ungu</text>
+          </svg>`,
+        microscope_lens: `
+          <svg viewBox="0 0 360 135" class="w-full max-w-md h-auto mx-auto rounded-xl bg-slate-50 border border-slate-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#0f172a">Perbandingan Jarak Kerja Lensa Objektif</text>
+            <!-- 10x Aman -->
+            <rect x="35" y="28" width="120" height="88" rx="8" fill="#ecfdf5" stroke="#10b981"/>
+            <text x="95" y="42" text-anchor="middle" font-size="9.5" font-weight="700" fill="#065f46">Objektif 10x (Aman)</text>
+            <rect x="78" y="48" width="34" height="22" rx="3" fill="#475569"/>
+            <line x1="95" y1="71" x2="95" y2="95" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <text x="122" y="85" font-size="8" fill="#065f46">Jarak luas</text>
+            <rect x="52" y="96" width="86" height="6" fill="#94a3b8"/>
+            <!-- 40x Rawan -->
+            <rect x="205" y="28" width="120" height="88" rx="8" fill="#fff1f2" stroke="#f43f5e"/>
+            <text x="265" y="42" text-anchor="middle" font-size="9.5" font-weight="700" fill="#9f1239">Objektif 40x (Mepet!)</text>
+            <rect x="248" y="48" width="34" height="42" rx="3" fill="#334155"/>
+            <rect x="222" y="94" width="86" height="6" fill="#94a3b8"/>
+            <text x="265" y="110" text-anchor="middle" font-size="8" font-weight="700" fill="#be123c">Rawan pecah kaca penutup!</text>
+          </svg>`,
+        bubbles: `
+          <svg viewBox="0 0 360 135" class="w-full max-w-md h-auto mx-auto rounded-xl bg-sky-50/70 border border-sky-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#0369a1">Artefak Lingkaran Bertepi Gelap pada Preparat Basah</text>
+            <g stroke="#cbd5e1" stroke-width="1.5" fill="#f8fafc">
+              <rect x="30" y="28" width="100" height="28"/><rect x="130" y="28" width="100" height="28"/><rect x="230" y="28" width="100" height="28"/>
+              <rect x="30" y="56" width="100" height="28"/><rect x="130" y="56" width="100" height="28"/><rect x="230" y="56" width="100" height="28"/>
+              <rect x="30" y="84" width="100" height="28"/><rect x="130" y="84" width="100" height="28"/><rect x="230" y="84" width="100" height="28"/>
+            </g>
+            <circle cx="115" cy="65" r="22" fill="#e0f2fe" fill-opacity="0.7" stroke="#0f172a" stroke-width="4"/>
+            <circle cx="215" cy="78" r="16" fill="#e0f2fe" fill-opacity="0.7" stroke="#0f172a" stroke-width="3.5"/>
+            <circle cx="168" cy="45" r="11" fill="#e0f2fe" fill-opacity="0.7" stroke="#0f172a" stroke-width="3"/>
+            <text x="180" y="126" text-anchor="middle" font-size="9" font-weight="600" fill="#0c4a6e">Gelembung udara terperangkap di bawah kaca penutup</text>
+          </svg>`,
+        chloroplast_eval: `
+          <svg viewBox="0 0 360 130" class="w-full max-w-md h-auto mx-auto rounded-xl bg-emerald-50/60 border border-emerald-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#065f46">Evaluasi Gambar Laporan Praktikum Bawang Merah</text>
+            <rect x="30" y="26" width="135" height="84" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+            <text x="97" y="40" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">Tampak di Mikroskop</text>
+            <rect x="48" y="48" width="98" height="48" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+            <circle cx="97" cy="72" r="5" fill="#92400e"/>
+            <text x="97" y="104" text-anchor="middle" font-size="8" fill="#64748b">Tanpa kloroplas</text>
+
+            <rect x="195" y="26" width="135" height="84" rx="8" fill="#fff1f2" stroke="#f43f5e"/>
+            <text x="262" y="40" text-anchor="middle" font-size="9" font-weight="700" fill="#9f1239">Gambar Murid (?)</text>
+            <rect x="213" y="48" width="98" height="48" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+            <circle cx="262" cy="72" r="5" fill="#92400e"/>
+            <circle cx="230" cy="60" r="4" fill="#16a34a"/><circle cx="290" cy="62" r="4" fill="#16a34a"/>
+            <circle cx="235" cy="84" r="4" fill="#16a34a"/><circle cx="288" cy="82" r="4" fill="#16a34a"/>
+            <text x="262" y="104" text-anchor="middle" font-size="8" font-weight="700" fill="#be123c">+ Kloroplas rekaan</text>
+          </svg>`,
+        video_control: `
+          <svg viewBox="0 0 360 125" class="w-full max-w-md h-auto mx-auto rounded-xl bg-indigo-50/60 border border-indigo-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#312e81">Kontrol Variabel dalam Dokumentasi & Pengukuran Sel</text>
+            <rect x="28" y="26" width="142" height="84" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+            <text x="99" y="42" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">Video Kelompok A</text>
+            <text x="99" y="60" text-anchor="middle" font-size="8.5" fill="#16a34a">✓ Gambar sangat jernih</text>
+            <text x="99" y="75" text-anchor="middle" font-size="8.5" fill="#dc2626">✕ Tanpa nama objek</text>
+            <text x="99" y="90" text-anchor="middle" font-size="8.5" fill="#dc2626">✕ Tanpa angka perbesaran</text>
+
+            <rect x="190" y="26" width="142" height="84" rx="8" fill="#eef2ff" stroke="#6366f1"/>
+            <text x="261" y="42" text-anchor="middle" font-size="9.5" font-weight="700" fill="#312e81">Video Kelompok B</text>
+            <text x="261" y="60" text-anchor="middle" font-size="8.5" fill="#d97706">~ Sedikit kurang stabil</text>
+            <text x="261" y="75" text-anchor="middle" font-size="8.5" fill="#15803d">✓ Objek & 100x jelas</text>
+            <text x="261" y="90" text-anchor="middle" font-size="8.5" fill="#15803d">✓ Skala pengukuran ada</text>
+          </svg>`,
+        polymer_glycerol: `
+          <svg viewBox="0 0 360 135" class="w-full max-w-md h-auto mx-auto rounded-xl bg-teal-50/70 border border-teal-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#115e59">Peran Molekul Gliserol pada Rantai Biopolimer Pati</text>
+            <!-- Tanpa gliserol -->
+            <rect x="24" y="26" width="146" height="94" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+            <text x="97" y="40" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">Tanpa Gliserol (Rapuh)</text>
+            <line x1="40" y1="56" x2="154" y2="56" stroke="#0f766e" stroke-width="3"/>
+            <line x1="40" y1="68" x2="154" y2="68" stroke="#0f766e" stroke-width="3"/>
+            <line x1="40" y1="80" x2="154" y2="80" stroke="#0f766e" stroke-width="3"/>
+            <text x="97" y="102" text-anchor="middle" font-size="8" fill="#dc2626">Ikatan rapat & kaku → retak</text>
+
+            <!-- Dengan gliserol -->
+            <rect x="190" y="26" width="146" height="94" rx="8" fill="#f0fdfa" stroke="#14b8a6"/>
+            <text x="263" y="40" text-anchor="middle" font-size="9" font-weight="700" fill="#115e59">+ Gliserol (Elastis)</text>
+            <path d="M205,54 Q235,48 263,54 T320,54" fill="none" stroke="#0f766e" stroke-width="2.8"/>
+            <circle cx="230" cy="67" r="4" fill="#f59e0b"/><circle cx="265" cy="67" r="4" fill="#f59e0b"/><circle cx="298" cy="67" r="4" fill="#f59e0b"/>
+            <path d="M205,82 Q235,76 263,82 T320,82" fill="none" stroke="#0f766e" stroke-width="2.8"/>
+            <text x="263" y="102" text-anchor="middle" font-size="8" fill="#0f766e">Gliserol menyisip → lentur</text>
+          </svg>`,
+        cup_vs_wrapper: `
+          <svg viewBox="0 0 360 130" class="w-full max-w-md h-auto mx-auto rounded-xl bg-amber-50/60 border border-amber-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#78350f">Dampak Rasio Gliserol pada Kekokohan Edible Cup</text>
+            <rect x="28" y="26" width="142" height="90" rx="8" fill="#ffffff" stroke="#10b981"/>
+            <text x="99" y="40" text-anchor="middle" font-size="9" font-weight="700" fill="#065f46">Kelompok X (Standar)</text>
+            <polygon points="75,50 123,50 115,92 83,92" fill="#a7f3d0" stroke="#059669" stroke-width="2"/>
+            <text x="99" y="106" text-anchor="middle" font-size="8" fill="#065f46">Dinding kokoh & tahan air</text>
+
+            <rect x="190" y="26" width="142" height="90" rx="8" fill="#fff1f2" stroke="#f43f5e"/>
+            <text x="261" y="40" text-anchor="middle" font-size="9" font-weight="700" fill="#9f1239">Kelompok Y (Berlebih)</text>
+            <path d="M235,54 Q261,64 287,52 L280,92 L242,92 Z" fill="#fecdd3" stroke="#e11d48" stroke-width="2"/>
+            <circle cx="288" cy="84" r="3" fill="#0284c7"/><circle cx="294" cy="92" r="2.5" fill="#0284c7"/>
+            <text x="261" y="106" text-anchor="middle" font-size="8" fill="#be123c">Lembek, melengkung & bocor</text>
+          </svg>`,
+        edible_straw: `
+          <svg viewBox="0 0 360 128" class="w-full max-w-md h-auto mx-auto rounded-xl bg-yellow-50/70 border border-yellow-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#854d0e">Uji Ketahanan Air Edible Straw (Pati + Agar-Agar)</text>
+            <rect x="30" y="28" width="300" height="84" rx="8" fill="#ffffff" stroke="#fde047"/>
+            <text x="45" y="48" font-size="9" font-weight="700" fill="#334155">Tanpa Pelapis:</text>
+            <rect x="135" y="38" width="38" height="14" rx="4" fill="#f87171"/>
+            <text x="180" y="48" font-size="8.5" fill="#b91c1c">3 menit (cepat menyerap air & melunak)</text>
+
+            <text x="45" y="76" font-size="9" font-weight="700" fill="#334155">Target Rekayasa:</text>
+            <rect x="135" y="66" width="165" height="14" rx="4" fill="#34d399"/>
+            <text x="142" y="76" font-size="8.5" font-weight="700" fill="#064e3b">>25 menit kokoh & tetap food-grade</text>
+            <text x="180" y="102" text-anchor="middle" font-size="8.5" fill="#713f12">Dibutuhkan barier hidrofobik alami di permukaan sedotan</text>
+          </svg>`,
+        degradation_chart: `
+          <svg viewBox="0 0 360 135" class="w-full max-w-md h-auto mx-auto rounded-xl bg-emerald-50/70 border border-emerald-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#065f46">Uji Degradasi Tanah Lembap Selama 30 Hari</text>
+            <g font-size="8.5" font-weight="700">
+              <text x="32" y="44" fill="#334155">Plastik PET</text>
+              <rect x="125" y="34" width="190" height="14" rx="3" fill="#94a3b8"/>
+              <text x="132" y="44" fill="#ffffff">0% Terurai (Utuh ratusan tahun)</text>
+
+              <text x="32" y="72" fill="#334155">Oxo-degradable</text>
+              <rect x="125" y="62" width="145" height="14" rx="3" fill="#f59e0b"/>
+              <text x="132" y="72" fill="#ffffff">Pecah jadi Mikroplastik!</text>
+
+              <text x="32" y="100" fill="#065f46">Bioplastik Pati</text>
+              <rect x="125" y="90" width="185" height="14" rx="3" fill="#10b981"/>
+              <text x="132" y="100" fill="#ffffff">>95% Terurai Hayati (CO2 + H2O)</text>
+            </g>
+            <text x="180" y="124" text-anchor="middle" font-size="8.5" fill="#047857">Biodegradasi sempurna tanpa meninggalkan mikroplastik</text>
+          </svg>`,
+        food_safety: `
+          <svg viewBox="0 0 360 125" class="w-full max-w-md h-auto mx-auto rounded-xl bg-rose-50/60 border border-rose-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#881337">Evaluasi Keamanan Pangan (Food-Grade) Edible Spoon</text>
+            <rect x="30" y="28" width="138" height="80" rx="8" fill="#fff1f2" stroke="#f43f5e"/>
+            <text x="99" y="46" text-anchor="middle" font-size="9.5" font-weight="700" fill="#be123c">⛔ Usulan Boraks</text>
+            <text x="99" y="64" text-anchor="middle" font-size="8.5" fill="#881337">Bersifat toksik / beracun</text>
+            <text x="99" y="79" text-anchor="middle" font-size="8.5" fill="#881337">Melanggar standar edible</text>
+
+            <rect x="192" y="28" width="138" height="80" rx="8" fill="#ecfdf5" stroke="#10b981"/>
+            <text x="261" y="46" text-anchor="middle" font-size="9.5" font-weight="700" fill="#047857">✅ Solusi Food-Grade</text>
+            <text x="261" y="64" text-anchor="middle" font-size="8.5" fill="#065f46">Hidrokoloid alami:</text>
+            <text x="261" y="79" text-anchor="middle" font-size="8.5" font-weight="700" fill="#065f46">Agar-agar / Karagenan</text>
+          </svg>`,
+        fair_test_cup: `
+          <svg viewBox="0 0 360 125" class="w-full max-w-md h-auto mx-auto rounded-xl bg-cyan-50/70 border border-cyan-200 p-2">
+            <text x="180" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#155e75">Parameter Uji Kelayakan Edible Wrapper Bumbu Mi Instan</text>
+            <g font-size="8.5" font-weight="700">
+              <rect x="24" y="30" width="98" height="76" rx="8" fill="#ffffff" stroke="#06b6d4"/>
+              <text x="73" y="50" text-anchor="middle" fill="#0e7490">1. Suhu Hangat</text>
+              <text x="73" y="66" text-anchor="middle" font-weight="400" fill="#334155">Kelarutan saat</text>
+              <text x="73" y="79" text-anchor="middle" font-weight="400" fill="#334155">diseduh air panas</text>
+
+              <rect x="131" y="30" width="98" height="76" rx="8" fill="#ffffff" stroke="#06b6d4"/>
+              <text x="180" y="50" text-anchor="middle" fill="#0e7490">2. Ketahanan Minyak</text>
+              <text x="180" y="66" text-anchor="middle" font-weight="400" fill="#334155">Tidak rembes saat</text>
+              <text x="180" y="79" text-anchor="middle" font-weight="400" fill="#334155">kontak bumbu minyak</text>
+
+              <rect x="238" y="30" width="98" height="76" rx="8" fill="#ffffff" stroke="#06b6d4"/>
+              <text x="287" y="50" text-anchor="middle" fill="#0e7490">3. Simpan Kering</text>
+              <text x="287" y="66" text-anchor="middle" font-weight="400" fill="#334155">Bebas jamur selama</text>
+              <text x="287" y="79" text-anchor="middle" font-weight="400" fill="#334155">masa penyimpanan</text>
+            </g>
+          </svg>`
+      };
+      return svgs[type] || '';
+    }
+
+    // =========================================================================
+    // 3. DATA BANK LEVEL 2: DRAG & DROP / TAP LAB (25 POIN)
+    // =========================================================================
+    const DND_CARDS = [
+      { id: 'c1', text: 'Susunan rapat seperti batu bata & bening', zone: 'onion' },
+      { id: 'c2', text: 'Dinding sel selulosa kaku tanpa kloroplas', zone: 'onion' },
+      { id: 'c3', text: 'Umbi lapis penyimpan cadangan makanan', zone: 'onion' },
+      { id: 'c4', text: 'Pigmen antosianin berwarna ungu kemerahan', zone: 'adamhawa' },
+      { id: 'c5', text: 'Memiliki stomata & sel penjaga berkloroplas', zone: 'adamhawa' },
+      { id: 'c6', text: 'Sel epidermis berbentuk segi enam / poligonal', zone: 'adamhawa' },
+      { id: 'c7', text: 'Matriks pati singkong & agar-agar food-grade', zone: 'bioplastic' },
+      { id: 'c8', text: 'Gliserol meningkatkan kelenturan film', zone: 'bioplastic' },
+      { id: 'c9', text: 'Terurai hayati tanpa residu mikroplastik', zone: 'bioplastic' },
+      { id: 'c10', text: 'Gelembung udara bulat bertepi hitam tebal', zone: 'artifact' },
+      { id: 'c11', text: 'Sayatan bertumpuk gelap sulit ditembus cahaya', zone: 'artifact' },
+      { id: 'c12', text: 'Langsung memakai objektif 40x saat mencari fokus', zone: 'artifact' }
+    ];
+
+    const SEQUENCE_STEPS = [
+      { id: 's1', order: 1, title: 'Menimbang pati singkong, agar-agar, air, dan gliserol food-grade sesuai rasio formulasi.' },
+      { id: 's2', order: 2, title: 'Memanaskan dan mengaduk larutan hingga terjadi gelatinisasi (mengental bening merata).' },
+      { id: 's3', order: 3, title: 'Menuang adonan panas ke cetakan (cup/lembaran) dan mengeringkannya pada suhu terkontrol.' },
+      { id: 's4', order: 4, title: 'Melapisi permukaan dengan beeswax tipis (opsional) serta menguji waktu tahan bocor air.' },
+      { id: 's5', order: 5, title: 'Mencatat data uji fisik, keamanan konsumsi, dan menyimpulkan kelayakan produk.' }
+    ];
+
+    // =========================================================================
+    // 4. DATA BANK LEVEL 3: CARI KATA ILMIAH 14x14 (15 POIN)
+    // =========================================================================
+    const WS_WORDS = [
+      { word: 'EPIDERMIS', fact: 'Jaringan pelindung terluar pada organ tumbuhan yang tersusun sangat rapat untuk mencegah kehilangan air dan masuknya patogen.' },
+      { word: 'KLOROPLAS', fact: 'Organel bermembran ganda tempat berlangsungnya fotosintesis; ditemukan pada sel penjaga stomata daun Adam Hawa, tetapi tidak pada umbi bawang merah.' },
+      { word: 'STOMATA', fact: 'Celah mikroskopis pada epidermis daun yang diapit sepasang sel penjaga untuk mengatur pertukaran gas CO2, O2, dan uap air.' },
+      { word: 'ANTOSIANIN', fact: 'Pigmen alami larut air di dalam vakuola yang memberi warna ungu kemerahan khas pada epidermis bawah daun Adam Hawa.' },
+      { word: 'MIKROMETER', fact: 'Sekrup pemutar halus pada mikroskop yang digunakan untuk mempertajam fokus bayangan secara presisi setelah fokus kasar ditemukan.' },
+      { word: 'PREPARAT', fact: 'Sediaan objek pengamatan di atas kaca benda yang ditutup kaca penutup miring 45° agar bebas dari gelembung udara.' },
+      { word: 'BIOPLASTIK', fact: 'Material polimer ramah lingkungan berbahan sumber hayati terbarukan (seperti pati singkong atau rumput laut) yang mudah terurai alami.' },
+      { word: 'GLISEROL', fact: 'Senyawa plasticizer food-grade yang menyisip di antara rantai pati untuk mengurangi kerapuhan dan meningkatkan elastisitas film.' },
+      { word: 'BIOPOLIMER', fact: 'Makromolekul rantai panjang alami seperti pati (amilosa-amilopektin), selulosa, dan agar-agar yang menjadi kerangka utama edible pack.' },
+      { word: 'SELULOSA', fact: 'Polisakarida penyusun utama dinding sel tumbuhan yang memberi kekuatan mekanis sehingga bentuk sel bawang merah tetap seperti batu bata.' },
+      { word: 'EDIBLEPACK', fact: 'Inovasi kemasan pangan yang aman dikonsumsi bersama makanan/minuman untuk menggantikan plastik sekali pakai.' },
+      { word: 'DEGRADASI', fact: 'Proses penguraian bahan organik oleh mikroorganisme tanah menjadi CO2, air, dan biomassa tanpa menyisakan mikroplastik.' }
+    ];
+
+    // =========================================================================
+    // 5. DATA BANK LEVEL 4: ESAI HOTS & KREASI SOP (30 POIN)
+    // =========================================================================
+    const ESSAY_DATA = [
+      {
+        id: 'e1',
+        module: 'microscope',
+        number: 'Soal No. 13',
+        level: 'C4 – Menganalisis (Mikroskop Sel)',
+        maxScore: 7.5,
+        title: 'Analisis Struktur Penentu Bentuk Sel Epidermis Bawang Merah',
+        prompt: 'Seorang murid mengamati epidermis bawang merah dan menemukan sel berbentuk persegi panjang yang tersusun rapat seperti batu bata. Analisislah:\n1) Mengapa sel epidermis tersebut tersusun rapat dan teratur?\n2) Struktur sel apakah yang mempertahankan bentuk tetap tersebut?\n3) Apa dampak biologis dan fisik jika struktur tersebut mengalami kerusakan?',
+        placeholder: 'Tuliskan analisismu mengenai fungsi proteksi jaringan epidermis, peran dinding sel selulosa, serta dampak jika dinding sel rusak/pecah...',
+        indicators: [
+          {
+            label: 'Alasan tersusun rapat & teratur (fungsi proteksi/pelindung jaringan di bawahnya)',
+            weight: 2.5,
+            terms: ['proteksi', 'melindungi', 'pelindung', 'rapat', 'mencegah', 'jaringan']
+          },
+          {
+            label: 'Struktur penentu bentuk sel (dinding sel / selulosa yang kaku)',
+            weight: 2.5,
+            terms: ['dinding sel', 'selulosa', 'kaku', 'rigid']
+          },
+          {
+            label: 'Dampak kerusakan (kehilangan bentuk tetap, sel pecah/lisis, rentan patogen/kekeringan)',
+            weight: 2.5,
+            terms: ['pecah', 'lisis', 'berubah bentuk', 'kehilangan bentuk', 'mengkerut', 'patogen', 'bakteri', 'kekeringan', 'turgor']
+          }
+        ],
+        modelAnswer: '1) Sel epidermis tersusun rapat tanpa ruang antar-sel untuk menjalankan fungsi proteksi (melindungi jaringan di dalamnya dari kerusakan fisik, penguapan berlebih, dan infeksi mikroba).\n2) Struktur yang mempertahankan bentuk persegi panjang secara kaku adalah dinding sel yang tersusun atas selulosa.\n3) Jika dinding sel rusak, sel kehilangan bentuk tetapnya, tidak mampu menahan tekanan turgor air sehingga mudah pecah (lisis) atau mengkerut, serta jaringan menjadi rentan terhadap infeksi patogen.'
+      },
+      {
+        id: 'e2',
+        module: 'microscope',
+        number: 'Soal No. 14',
+        level: 'C5 – Mengevaluasi (Mikroskop Sel)',
+        maxScore: 7.5,
+        title: 'Evaluasi Klaim Kloroplas & Perbandingan Sel Bawang Merah vs Daun Adam Hawa',
+        prompt: 'Seorang murid menyatakan: "Karena bawang merah dan daun Adam Hawa sama-sama berasal dari tumbuhan, maka seluruh bagian selnya pasti memiliki kloroplas dan susunan yang identik." Evaluasilah kebenaran pernyataan tersebut dan berikan minimal dua bukti perbandingan dari hasil pengamatan mikroskop kedua objek!',
+        placeholder: 'Nyatakan sikap setuju/tidak setuju, lalu bandingkan keberadaan kloroplas, bentuk sel, stomata, dan pigmen antosianin pada bawang merah vs daun Adam Hawa...',
+        indicators: [
+          {
+            label: 'Sikap evaluatif tegas (tidak setuju / pernyataan keliru)',
+            weight: 1.5,
+            terms: ['tidak setuju', 'salah', 'keliru', 'kurang tepat', 'tidak benar']
+          },
+          {
+            label: 'Bukti 1: Perbedaan kloroplas & fungsi organ (umbi bawang merah tidak berkloroplas vs daun Adam Hawa memiliki kloroplas di sel penjaga stomata)',
+            weight: 3.0,
+            terms: ['kloroplas', 'fotosintesis', 'umbi', 'dalam tanah', 'stomata', 'sel penjaga']
+          },
+          {
+            label: 'Bukti 2: Perbedaan bentuk sel & pigmen (persegi panjang bening vs poligonal/segi enam berpigmen ungu antosianin)',
+            weight: 3.0,
+            terms: ['antosianin', 'ungu', 'segi enam', 'poligonal', 'persegi panjang', 'batu bata', 'bening', 'transparan']
+          }
+        ],
+        modelAnswer: 'Tidak setuju. Meskipun sama-sama tumbuhan, jaringan yang berbeda memiliki struktur dan fungsi yang terspesialisasi:\n1) Keberadaan kloroplas: Umbi lapis bawang merah tumbuh di dalam tanah dan tidak berfotosintesis sehingga tidak memiliki kloroplas, sedangkan epidermis daun Adam Hawa memiliki sel penjaga stomata yang berkloroplas.\n2) Morfologi dan pigmen: Sel epidermis bawang merah berbentuk persegi panjang bening seperti batu bata, sedangkan epidermis bawah daun Adam Hawa berbentuk segi enam (poligonal), memiliki celah stomata, serta mengandung pigmen antosianin ungu kemerahan.'
+      },
+      {
+        id: 'e3',
+        module: 'bioplastic',
+        number: 'Soal No. 15',
+        level: 'C5 – Mengevaluasi (Bioplastik & Edible Pack)',
+        maxScore: 7.5,
+        title: 'Evaluasi Kegagalan Purwarupa Edible Cup Melengkung & Edible Straw Bocor',
+        prompt: 'Dalam workshop bioplastik, sebuah kelompok menguji dua purwarupa:\n• Purwarupa 1 (Edible Cup): Dindingnya terlalu lembek, melengkung, dan bocor saat diisi air.\n• Purwarupa 2 (Edible Straw): Terlalu cepat menyerap air dan melunak dalam waktu 2 menit.\nEvaluasilah penyebab kedua kegagalan tersebut dari sisi rasio gliserol dan sifat biopolimer, serta rumuskan perbaikan formulasi atau pelapisan alami food-grade!',
+        placeholder: 'Evaluasi dampak gliserol berlebih pada edible cup serta sifat hidrofilik pati pada edible straw, lalu berikan solusi pengurangan gliserol, penambahan agar-agar/karagenan, dan pelapisan beeswax...',
+        indicators: [
+          {
+            label: 'Evaluasi edible cup (gliserol berlebih / matriks biopolimer lemah)',
+            weight: 2.5,
+            terms: ['gliserol', 'berlebih', 'lembek', 'melengkung', 'bocor', 'matriks', 'agar-agar', 'karagenan']
+          },
+          {
+            label: 'Evaluasi edible straw (sifat pati hidrofilik / menyerap air / tanpa barier tahan air)',
+            weight: 2.5,
+            terms: ['hidrofilik', 'menyerap air', 'larut', 'melunak', 'pati', 'pengeringan']
+          },
+          {
+            label: 'Solusi perbaikan food-grade (kurangi gliserol, perkuat agar-agar/karagenan, lapisi beeswax)',
+            weight: 2.5,
+            terms: ['beeswax', 'lilin lebah', 'hidrofobik', 'kurangi gliserol', 'rasio', 'agar-agar', 'karagenan', 'food-grade']
+          }
+        ],
+        modelAnswer: '1) Edible cup lembek dan melengkung terjadi karena takaran plasticizer gliserol terlalu tinggi sehingga melemahkan ikatan matriks biopolimer dan menarik kelembapan air. Perbaikan: kurangi rasio gliserol dan perkuat struktur gel dengan agar-agar atau karagenan.\n2) Edible straw cepat melunak karena pati bersifat suka air (hidrofilik). Perbaikan: optimalkan pengeringan dan berikan pelapisan tipis lilin lebah murni (beeswax) food-grade yang bersifat hidrofobik untuk menahan rembesan air.'
+      },
+      {
+        id: 'e4',
+        module: 'bioplastic',
+        number: 'Soal No. 16',
+        level: 'C6 – Mencipta (Kreasi SOP Terpadu)',
+        maxScore: 7.5,
+        title: 'Kreasi SOP 5 Tahap Pembuatan Produk Edible Pack Ramah Lingkungan',
+        prompt: 'Rancanglah prosedur operasional standar (SOP) lengkap untuk membuat satu produk Edible Pack ramah lingkungan (pilih: Edible Cup, Edible Straw, atau Edible Wrapper) pengganti plastik sekali pakai di kantin sekolah melalui 5 tahapan terstruktur di bawah ini:',
+        isStructuredSOP: true,
+        subFields: [
+          { key: 'tools', label: '1. Alat & Bahan Food-Grade', placeholder: 'Sebutkan alat masak/cetakan bersih, bahan food-grade (pati singkong, agar-agar, gliserol, air), dan plastik kantin yang digantikan...' },
+          { key: 'formulation', label: '2. Formulasi & Rasio Bahan', placeholder: 'Jelaskan penimbangan komposisi dan perbandingan rasio biopolimer serta plasticizer gliserol...' },
+          { key: 'molding', label: '3. Pemasakan & Pencetakan', placeholder: 'Jelaskan proses pelarutan, pemanasan hingga gelatinisasi (mengental bening), pencetakan, dan pengeringan...' },
+          { key: 'testing', label: '4. Uji Kualitas & Food-Grade', placeholder: 'Jelaskan pengujian ketahanan air/suhu, kelenturan/kekokohan fisik, serta keamanan pangan (organoleptik & higienitas)...' },
+          { key: 'conclusion', label: '5. Penyajian Kesimpulan Produk', placeholder: 'Jelaskan cara menyimpulkan kelayakan produk berdasarkan data uji serta pengemasan higienis siap pakai...' }
+        ],
+        indicators: [
+          {
+            label: '1. Alat & bahan food-grade teridentifikasi lengkap',
+            weight: 1.5,
+            terms: ['alat', 'bahan', 'pati', 'agar', 'gliserol', 'food-grade', 'cetakan', 'panci', 'timbangan']
+          },
+          {
+            label: '2. Formulasi & pengaturan rasio biopolimer-plasticizer',
+            weight: 1.5,
+            terms: ['rasio', 'timbang', 'takaran', 'perbandingan', 'komposisi', 'gram', 'ml', 'larut']
+          },
+          {
+            label: '3. Pemasakan (gelatinisasi), pencetakan, dan pengeringan',
+            weight: 1.5,
+            terms: ['panas', 'masak', 'gelatinisasi', 'aduk', 'mengental', 'cetak', 'tuang', 'kering']
+          },
+          {
+            label: '4. Uji kualitas fisik (ketahanan air/lentur) & keamanan pangan (food-grade)',
+            weight: 1.5,
+            terms: ['uji', 'ketahanan', 'air', 'bocor', 'lentur', 'kokoh', 'aman', 'konsumsi', 'organoleptik', 'higienis']
+          },
+          {
+            label: '5. Penyajian kesimpulan berbasis data uji & rekomendasi pemakaian',
+            weight: 1.5,
+            terms: ['kesimpulan', 'data', 'layak', 'kemas', 'ramah lingkungan', 'biodegradable', 'kantin']
+          }
+        ],
+        modelAnswer: '1. Alat & Bahan Food-Grade: Timbangan digital, panci stainless, pengaduk, cetakan gelas/sedotan; bahan: pati singkong, agar-agar rumput laut, gliserol food-grade, air, pewarna alami pandan.\n2. Formulasi & Rasio: Menimbang pati singkong dan agar-agar sesuai rasio kokoh serta menambahkan gliserol secukupnya (sekitar 15-20% berat pati) agar lentur namun tidak lembek.\n3. Pemasakan & Pencetakan: Melarutkan semua bahan, memanaskan sambil diaduk hingga terjadi gelatinisasi (mengental bening), menuang ke cetakan, lalu mengeringkan pada suhu terkontrol.\n4. Uji Kualitas & Food-Grade: Menguji waktu tahan bocor saat diisi air, uji kelenturan/kekokohan mekanis, serta uji organoleptik dan kebersihan untuk menjamin aman dimakan.\n5. Penyajian Kesimpulan: Menyimpulkan kelayakan produk berdasarkan data durasi tahan air dan keamanan pangan untuk menggantikan kemasan plastik sekali pakai di kantin.'
+      }
+    ];
+
+    // =========================================================================
+    // 6. STATE APLIKASI & PENYIMPANAN LOCALSTORAGE
+    // =========================================================================
+    const STORAGE_KEY = 'science_workshop_lab_v3';
+
+    function getInitialState() {
+      return {
+        activeTab: 'level1',
+        moduleFilter: 'all',
+        student: {
+          name: '',
+          className: '7A',
+          group: '',
+          role: 'Project Leader'
+        },
+        mcqAnswers: {},
+        dnd: {
+          placements: {}, // cardId -> zoneName
+          selectedCardId: null,
+          sequenceOrder: ['s3', 's1', 's5', 's2', 's4'],
+          graded: false,
+          aScore: 0,
+          bScore: 0
+        },
+        wordSearch: {
+          grid: [],
+          foundWords: [],
+          lastFactWord: null
+        },
+        essay: {
+          responses: {
+            e1: '',
+            e2: '',
+            e3: '',
+            e4: { tools: '', formulation: '', molding: '', testing: '', conclusion: '' }
+          },
+          gradedResults: null
+        }
+      };
+    }
+
+    let appState = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return getInitialState();
+        const parsed = JSON.parse(raw);
+        const def = getInitialState();
+        return {
+          ...def,
+          ...parsed,
+          student: { ...def.student, ...(parsed.student || {}) },
+          dnd: { ...def.dnd, ...(parsed.dnd || {}) },
+          wordSearch: { ...def.wordSearch, ...(parsed.wordSearch || {}) },
+          essay: {
+            ...def.essay,
+            ...(parsed.essay || {}),
+            responses: { ...def.essay.responses, ...((parsed.essay && parsed.essay.responses) || {}) }
+          }
+        };
+      } catch (e) {
+        return getInitialState();
+      }
+    }
+
+    function saveState(showToastMsg = false) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        if (showToastMsg) showToast('Progres tersimpan otomatis');
+      } catch (e) {
+        console.warn('Gagal menyimpan ke localStorage:', e);
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(msg, icon = '✅') {
+      const box = document.getElementById('toast-box');
+      document.getElementById('toast-text').textContent = msg;
+      document.getElementById('toast-icon').textContent = icon;
+      box.classList.remove('opacity-0', 'translate-y-3');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        box.classList.add('opacity-0', 'translate-y-3');
+      }, 2200);
+    }
+
+    // =========================================================================
+    // 7. NAVIGASI TAB & IDENTITAS PRAKTIKAN
+    // =========================================================================
+    function initIdentityInputs() {
+      const nameEl = document.getElementById('student-name');
+      const classEl = document.getElementById('student-class');
+      const groupEl = document.getElementById('student-group');
+      const roleEl = document.getElementById('student-role');
+
+      nameEl.value = appState.student.name || '';
+      classEl.value = appState.student.className || '7A';
+      groupEl.value = appState.student.group || '';
+      roleEl.value = appState.student.role || 'Project Leader';
+
+      const syncHandler = () => {
+        appState.student.name = nameEl.value.trim();
+        appState.student.className = classEl.value;
+        appState.student.group = groupEl.value.trim();
+        appState.student.role = roleEl.value;
+        saveState(true);
+        updateAllScoresAndReport();
+      };
+
+      nameEl.addEventListener('input', syncHandler);
+      classEl.addEventListener('change', syncHandler);
+      groupEl.addEventListener('input', syncHandler);
+      roleEl.addEventListener('change', syncHandler);
+    }
+
+    function switchTab(tabId) {
+      appState.activeTab = tabId;
+      saveState(false);
+
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      const activePanel = document.getElementById('panel-' + tabId);
+      if (activePanel) activePanel.classList.add('active');
+
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.classList.remove('bg-teal-600', 'text-white', 'shadow-sm', 'font-bold');
+        btn.classList.add('text-slate-600', 'hover:bg-slate-100', 'font-semibold');
+      });
+
+      const activeBtn = document.getElementById('tab-btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100', 'font-semibold');
+        activeBtn.classList.add('bg-teal-600', 'text-white', 'shadow-sm', 'font-bold');
+      }
+
+      if (tabId === 'report') {
+        updateAllScoresAndReport();
+      }
+    }
+
+    function setModuleFilter(filter) {
+      appState.moduleFilter = filter;
+      saveState(false);
+
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.dataset.filter === filter) {
+          btn.classList.remove('text-teal-100', 'hover:bg-white/10', 'font-semibold');
+          btn.classList.add('bg-teal-500', 'text-white', 'shadow-sm', 'font-bold');
+        } else {
+          btn.classList.remove('bg-teal-500', 'text-white', 'shadow-sm', 'font-bold');
+          btn.classList.add('text-teal-100', 'hover:bg-white/10', 'font-semibold');
+        }
+      });
+
+      renderMCQ();
+      renderEssaySection();
+    }
+
+    // =========================================================================
+    // 8. RENDER & LOGIKA LEVEL 1: PILIHAN GANDA HOTS (30 POIN)
+    // =========================================================================
+    function renderMCQ() {
+      const container = document.getElementById('mcq-container');
+      const filtered = MCQ_DATA.filter(q => appState.moduleFilter === 'all' || q.module === appState.moduleFilter);
+
+      container.innerHTML = filtered.map(q => {
+        const userChoice = appState.mcqAnswers[q.id];
+        const isAnswered = userChoice !== undefined;
+        const letters = ['A', 'B', 'C', 'D'];
+
+        const optionsHtml = q.options.map((opt, idx) => {
+          let btnClass = 'border-slate-200 bg-white hover:border-teal-400 hover:bg-teal-50/40 text-slate-800';
+          let badgeClass = 'bg-slate-100 text-slate-700';
+          let statusIcon = '';
+
+          if (isAnswered) {
+            if (idx === q.correct) {
+              btnClass = 'border-emerald-500 bg-emerald-50 text-emerald-950 font-semibold';
+              badgeClass = 'bg-emerald-600 text-white';
+              statusIcon = '<span class="ml-auto text-emerald-700 font-bold text-xs">✓ Benar</span>';
+            } else if (idx === userChoice && userChoice !== q.correct) {
+              btnClass = 'border-rose-400 bg-rose-50 text-rose-950';
+              badgeClass = 'bg-rose-600 text-white';
+              statusIcon = '<span class="ml-auto text-rose-700 font-bold text-xs">✕ Pilihanmu</span>';
+            } else {
+              btnClass = 'border-slate-200 bg-slate-50/70 text-slate-400';
+              badgeClass = 'bg-slate-200 text-slate-500';
+            }
+          }
+
+          return `
+            <button type="button" ${isAnswered ? 'disabled' : ''} onclick="selectMCQOption(${q.id}, ${idx})"
+              class="w-full text-left p-3.5 rounded-xl border-2 transition flex items-start gap-3 ${btnClass} ${isAnswered ? 'cursor-default' : 'cursor-pointer'}">
+              <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5 ${badgeClass}">
+                ${letters[idx]}
+              </span>
+              <span class="text-xs sm:text-sm leading-relaxed">${opt}</span>
+              ${statusIcon}
+            </button>
+          `;
+        }).join('');
+
+        return `
+          <article class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-xs font-extrabold">Soal No. ${q.id}</span>
+                <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${q.module === 'microscope' ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'}">
+                  ${q.moduleLabel}
+                </span>
+                <span class="px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800 border border-teal-200 text-xs font-semibold">
+                  ${q.level}
+                </span>
+              </div>
+              <span class="text-xs font-bold text-slate-400">Bobot: 2,5 poin</span>
+            </div>
+
+            <div class="my-4">
+              ${renderStimulusSVG(q.stimulusType)}
+            </div>
+
+            <p class="text-sm sm:text-base font-semibold text-slate-900 leading-relaxed mb-4">
+              ${q.question}
+            </p>
+
+            <div class="space-y-2.5">
+              ${optionsHtml}
+            </div>
+
+            ${isAnswered ? `
+              <div class="mt-4 p-4 rounded-xl ${userChoice === q.correct ? 'bg-emerald-50 border border-emerald-200 text-emerald-950' : 'bg-amber-50 border border-amber-200 text-amber-950'} text-xs sm:text-sm leading-relaxed">
+                <div class="font-extrabold mb-1">${userChoice === q.correct ? '🎯 Analisis Tepat!' : '💡 Pembahasan Ilmiah:'}</div>
+                <p>${q.explanation}</p>
+              </div>
+            ` : ''}
+          </article>
+        `;
+      }).join('');
+    }
+
+    function selectMCQOption(questionId, optionIdx) {
+      if (appState.mcqAnswers[questionId] !== undefined) return;
+      appState.mcqAnswers[questionId] = optionIdx;
+      saveState(true);
+      renderMCQ();
+      updateAllScoresAndReport();
+    }
+
+    function resetLevel1() {
+      appState.mcqAnswers = {};
+      saveState(false);
+      renderMCQ();
+      updateAllScoresAndReport();
+      showToast('Level 1 telah direset', '🔄');
+    }
+
+    // =========================================================================
+    // 9. RENDER & LOGIKA LEVEL 2: DRAG & DROP / TAP LAB (25 POIN)
+    // =========================================================================
+    function renderLevel2() {
+      const poolEl = document.getElementById('dnd-source-pool');
+      const zones = ['onion', 'adamhawa', 'bioplastic', 'artifact'];
+      zones.forEach(z => {
+        document.getElementById('zone-items-' + z).innerHTML = '';
+      });
+      poolEl.innerHTML = '';
+
+      let remainingInPool = 0;
+
+      DND_CARDS.forEach(card => {
+        const placedZone = appState.dnd.placements[card.id];
+        const isSelected = appState.dnd.selectedCardId === card.id;
+
+        let statusBadge = '';
+        let borderExtra = 'border-slate-200 bg-white text-slate-800';
+
+        if (appState.dnd.graded && placedZone) {
+          if (placedZone === card.zone) {
+            borderExtra = 'border-emerald-500 bg-emerald-50 text-emerald-950';
+            statusBadge = '<span class="ml-1.5 text-emerald-700 font-extrabold">✓</span>';
+          } else {
+            borderExtra = 'border-rose-500 bg-rose-50 text-rose-950';
+            statusBadge = '<span class="ml-1.5 text-rose-700 font-extrabold">✕</span>';
+          }
+        }
+
+        const chipHtml = `
+          <div draggable="true"
+            ondragstart="dragCardStart(event, '${card.id}')"
+            onclick="event.stopPropagation(); toggleSelectCard('${card.id}')"
+            class="draggable-chip cursor-pointer px-3 py-2 rounded-xl border-2 text-xs font-semibold shadow-sm flex items-center gap-1.5 ${borderExtra} ${isSelected ? 'selected-chip' : ''}">
+            <span>${card.text}</span>
+            ${statusBadge}
+            ${placedZone ? `<button type="button" onclick="event.stopPropagation(); removeCardFromZone('${card.id}')" title="Kembalikan ke bank kartu" class="ml-1 text-slate-400 hover:text-rose-600 font-bold">×</button>` : ''}
+          </div>
+        `;
+
+        if (!placedZone) {
+          remainingInPool++;
+          poolEl.insertAdjacentHTML('beforeend', chipHtml);
+        } else {
+          const targetContainer = document.getElementById('zone-items-' + placedZone);
+          if (targetContainer) targetContainer.insertAdjacentHTML('beforeend', chipHtml);
+        }
+      });
+
+      document.getElementById('dnd-pool-counter').textContent = `Sisa di Bank Kartu: ${remainingInPool}`;
+
+      // Render Bagian B: Urutan 5 Tahap
+      const seqList = document.getElementById('sequence-list');
+      seqList.innerHTML = appState.dnd.sequenceOrder.map((stepId, idx) => {
+        const stepObj = SEQUENCE_STEPS.find(s => s.id === stepId);
+        const isCorrectPos = appState.dnd.graded && stepObj.order === (idx + 1);
+        const isWrongPos = appState.dnd.graded && stepObj.order !== (idx + 1);
+
+        let rowStyle = 'border-slate-200 bg-slate-50';
+        if (isCorrectPos) rowStyle = 'border-emerald-500 bg-emerald-50';
+        if (isWrongPos) rowStyle = 'border-rose-400 bg-rose-50';
+
+        return `
+          <div draggable="true"
+            ondragstart="dragSeqStart(event, ${idx})"
+            ondragover="allowDrop(event)"
+            ondrop="dropSeq(event, ${idx})"
+            class="p-3.5 rounded-xl border-2 ${rowStyle} flex items-center justify-between gap-3 transition">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0">
+                ${idx + 1}
+              </span>
+              <span class="text-xs sm:text-sm font-medium text-slate-800">${stepObj.title}</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              ${appState.dnd.graded ? `<span class="text-xs font-extrabold mr-1 ${isCorrectPos ? 'text-emerald-700' : 'text-rose-700'}">${isCorrectPos ? '✓ Tepat' : '✕ Urutan #' + stepObj.order}</span>` : ''}
+              <button type="button" onclick="moveSequence(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}
+                class="w-8 h-8 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-30 text-xs font-bold">▲</button>
+              <button type="button" onclick="moveSequence(${idx}, 1)" ${idx === appState.dnd.sequenceOrder.length - 1 ? 'disabled' : ''}
+                class="w-8 h-8 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-30 text-xs font-bold">▼</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    let draggedCardId = null;
+    function dragCardStart(ev, cardId) {
+      draggedCardId = cardId;
+      appState.dnd.selectedCardId = cardId;
+    }
+
+    function allowDrop(ev) {
+      ev.preventDefault();
+      if (ev.currentTarget.classList.contains('drop-zone')) {
+        ev.currentTarget.classList.add('drop-zone-active');
+      }
+    }
+
+    function leaveDrop(ev) {
+      if (ev.currentTarget.classList.contains('drop-zone')) {
+        ev.currentTarget.classList.remove('drop-zone-active');
+      }
+    }
+
+    function dropToZone(ev, zoneName) {
+      ev.preventDefault();
+      ev.currentTarget.classList.remove('drop-zone-active');
+      const id = draggedCardId || appState.dnd.selectedCardId;
+      if (!id) return;
+      appState.dnd.placements[id] = zoneName;
+      appState.dnd.selectedCardId = null;
+      draggedCardId = null;
+      appState.dnd.graded = false;
+      saveState(false);
+      renderLevel2();
+    }
+
+    function dropToPool(ev) {
+      ev.preventDefault();
+      const id = draggedCardId || appState.dnd.selectedCardId;
+      if (!id) return;
+      delete appState.dnd.placements[id];
+      appState.dnd.selectedCardId = null;
+      draggedCardId = null;
+      appState.dnd.graded = false;
+      saveState(false);
+      renderLevel2();
+    }
+
+    function toggleSelectCard(cardId) {
+      appState.dnd.selectedCardId = (appState.dnd.selectedCardId === cardId) ? null : cardId;
+      renderLevel2();
+    }
+
+    function handleZoneTap(zoneName) {
+      const id = appState.dnd.selectedCardId;
+      if (!id) {
+        showToast('Ketuk salah satu kartu di bank kartu terlebih dahulu', '👆');
+        return;
+      }
+      appState.dnd.placements[id] = zoneName;
+      appState.dnd.selectedCardId = null;
+      appState.dnd.graded = false;
+      saveState(false);
+      renderLevel2();
+    }
+
+    function removeCardFromZone(cardId) {
+      delete appState.dnd.placements[cardId];
+      appState.dnd.graded = false;
+      saveState(false);
+      renderLevel2();
+    }
+
+    let draggedSeqIndex = null;
+    function dragSeqStart(ev, idx) {
+      draggedSeqIndex = idx;
+    }
+
+    function dropSeq(ev, targetIdx) {
+      ev.preventDefault();
+      if (draggedSeqIndex === null || draggedSeqIndex === targetIdx) return;
+      const arr = [...appState.dnd.sequenceOrder];
+      const [moved] = arr.splice(draggedSeqIndex, 1);
+      arr.splice(targetIdx, 0, moved);
+      appState.dnd.sequenceOrder = arr;
+      appState.dnd.graded = false;
+      draggedSeqIndex = null;
+      saveState(false);
+      renderLevel2();
+    }
+
+    function moveSequence(idx, delta) {
+      const targetIdx = idx + delta;
+      if (targetIdx < 0 || targetIdx >= appState.dnd.sequenceOrder.length) return;
+      const arr = [...appState.dnd.sequenceOrder];
+      const temp = arr[idx];
+      arr[idx] = arr[targetIdx];
+      arr[targetIdx] = temp;
+      appState.dnd.sequenceOrder = arr;
+      appState.dnd.graded = false;
+      saveState(false);
+      renderLevel2();
+    }
+
+    function gradeLevel2() {
+      let correctCards = 0;
+      DND_CARDS.forEach(c => {
+        if (appState.dnd.placements[c.id] === c.zone) correctCards++;
+      });
+
+      let correctSteps = 0;
+      appState.dnd.sequenceOrder.forEach((stepId, idx) => {
+        const obj = SEQUENCE_STEPS.find(s => s.id === stepId);
+        if (obj && obj.order === idx + 1) correctSteps++;
+      });
+
+      appState.dnd.aScore = Number(((correctCards / DND_CARDS.length) * 15).toFixed(2));
+      appState.dnd.bScore = Number(((correctSteps / SEQUENCE_STEPS.length) * 10).toFixed(2));
+      appState.dnd.graded = true;
+
+      saveState(true);
+      renderLevel2();
+      updateAllScoresAndReport();
+      showToast(`Level 2 dikoreksi: ${(appState.dnd.aScore + appState.dnd.bScore).toFixed(1)} / 25 poin`, '🎯');
+    }
+
+    function resetLevel2() {
+      appState.dnd = {
+        placements: {},
+        selectedCardId: null,
+        sequenceOrder: ['s3', 's1', 's5', 's2', 's4'],
+        graded: false,
+        aScore: 0,
+        bScore: 0
+      };
+      saveState(false);
+      renderLevel2();
+      updateAllScoresAndReport();
+      showToast('Level 2 telah direset', '🔄');
+    }
+
+    // =========================================================================
+    // 10. RENDER & LOGIKA LEVEL 3: CARI KATA ILMIAH 14x14 (15 POIN)
+    // =========================================================================
+    const GRID_SIZE = 14;
+    let wsSelecting = false;
+    let wsStartCell = null;
+    let wsCurrentPath = [];
+
+    function generateWordSearchGrid() {
+      const grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(''));
+      const directions = [
+        [0, 1],   // horizontal kanan
+        [1, 0],   // vertikal bawah
+        [1, 1],   // diagonal kanan-bawah
+        [-1, 1]   // diagonal kanan-atas
+      ];
+
+      const sortedWords = [...WS_WORDS].sort((a, b) => b.word.length - a.word.length);
+
+      sortedWords.forEach(item => {
+        const word = item.word;
+        let placed = false;
+        for (let attempt = 0; attempt < 250 && !placed; attempt++) {
+          const [dr, dc] = directions[Math.floor(Math.random() * directions.length)];
+          const r0 = Math.floor(Math.random() * GRID_SIZE);
+          const c0 = Math.floor(Math.random() * GRID_SIZE);
+
+          const rEnd = r0 + dr * (word.length - 1);
+          const cEnd = c0 + dc * (word.length - 1);
+          if (rEnd < 0 || rEnd >= GRID_SIZE || cEnd < 0 || cEnd >= GRID_SIZE) continue;
+
+          let fits = true;
+          for (let i = 0; i < word.length; i++) {
+            const rr = r0 + dr * i;
+            const cc = c0 + dc * i;
+            if (grid[rr][cc] !== '' && grid[rr][cc] !== word[i]) {
+              fits = false;
+              break;
+            }
+          }
+
+          if (fits) {
+            for (let i = 0; i < word.length; i++) {
+              grid[r0 + dr * i][c0 + dc * i] = word[i];
+            }
+            placed = true;
+          }
+        }
+      });
+
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+          if (grid[r][c] === '') {
+            grid[r][c] = alphabet[Math.floor(Math.random() * alphabet.length)];
+          }
+        }
+      }
+      return grid;
+    }
+
+    function ensureWordSearchInitialized() {
+      if (!appState.wordSearch.grid || appState.wordSearch.grid.length !== GRID_SIZE) {
+        appState.wordSearch.grid = generateWordSearchGrid();
+        saveState(false);
+      }
+    }
+
+    function renderWordSearch() {
+      ensureWordSearchInitialized();
+      const gridEl = document.getElementById('wordsearch-grid');
+      const listEl = document.getElementById('ws-word-list');
+
+      // Hitung koordinat sel yang sudah ditemukan
+      const foundCoords = new Set();
+      appState.wordSearch.foundWords.forEach(entry => {
+        if (entry.coords) {
+          entry.coords.forEach(([r, c]) => foundCoords.add(`${r},${c}`));
+        }
+      });
+
+      gridEl.innerHTML = '';
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+          const isFound = foundCoords.has(`${r},${c}`);
+          const cell = document.createElement('div');
+          cell.dataset.r = r;
+          cell.dataset.c = c;
+          cell.textContent = appState.wordSearch.grid[r][c];
+          cell.className = `word-cell rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold cursor-pointer border border-slate-200/80 ${isFound ? 'found' : 'bg-white text-slate-800 hover:bg-teal-50'}`;
+
+          cell.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            wsSelecting = true;
+            wsStartCell = { r, c };
+            wsCurrentPath = [[r, c]];
+            highlightWSPath();
+          });
+
+          cell.addEventListener('pointerenter', () => {
+            if (!wsSelecting || !wsStartCell) return;
+            updateWSPathTo(r, c);
+          });
+
+          gridEl.appendChild(cell);
+        }
+      }
+
+      // Render daftar kata
+      const foundSet = new Set(appState.wordSearch.foundWords.map(f => f.word));
+      listEl.innerHTML = WS_WORDS.map(item => {
+        const done = foundSet.has(item.word);
+        return `
+          <button type="button" ${done ? `onclick="showWSFact('${item.word}')"` : ''}
+            class="px-3 py-2 rounded-xl border text-left text-xs font-bold flex items-center justify-between transition ${done ? 'bg-emerald-50 border-emerald-300 text-emerald-900 line-through cursor-pointer' : 'bg-slate-50 border-slate-200 text-slate-700 cursor-default'}">
+            <span>${item.word}</span>
+            <span>${done ? '✅' : '🔍'}</span>
+          </button>
+        `;
+      }).join('');
+
+      document.getElementById('ws-found-count').textContent = foundSet.size;
+      if (appState.wordSearch.lastFactWord) {
+        showWSFact(appState.wordSearch.lastFactWord);
+      }
+    }
+
+    // Global pointermove & pointerup untuk sentuhan layar HP/tablet pada grid cari kata
+    window.addEventListener('pointermove', (e) => {
+      if (!wsSelecting || !wsStartCell) return;
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (el && el.classList.contains('word-cell')) {
+        const r = Number(el.dataset.r);
+        const c = Number(el.dataset.c);
+        updateWSPathTo(r, c);
+      }
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (!wsSelecting) return;
+      wsSelecting = false;
+      validateWSSelection();
+      wsStartCell = null;
+      wsCurrentPath = [];
+      clearWSHighlight();
+    });
+
+    function updateWSPathTo(rEnd, cEnd) {
+      const r0 = wsStartCell.r;
+      const c0 = wsStartCell.c;
+      const dr = rEnd - r0;
+      const dc = cEnd - c0;
+
+      // Hanya izinkan garis lurus horizontal, vertikal, atau diagonal 45 derajat
+      if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) return;
+
+      const steps = Math.max(Math.abs(dr), Math.abs(dc));
+      const stepR = steps === 0 ? 0 : dr / steps;
+      const stepC = steps === 0 ? 0 : dc / steps;
+
+      const path = [];
+      for (let i = 0; i <= steps; i++) {
+        path.push([r0 + stepR * i, c0 + stepC * i]);
+      }
+      wsCurrentPath = path;
+      highlightWSPath();
+    }
+
+    function highlightWSPath() {
+      clearWSHighlight();
+      const letters = [];
+      wsCurrentPath.forEach(([r, c]) => {
+        const cell = document.querySelector(`.word-cell[data-r="${r}"][data-c="${c}"]`);
+        if (cell) cell.classList.add('selecting');
+        letters.push(appState.wordSearch.grid[r][c]);
+      });
+      document.getElementById('ws-selection-preview').textContent = letters.join('') || 'Seret huruf...';
+    }
+
+    function clearWSHighlight() {
+      document.querySelectorAll('.word-cell.selecting').forEach(el => el.classList.remove('selecting'));
+      document.getElementById('ws-selection-preview').textContent = 'Seret huruf pada kotak...';
+    }
+
+    function validateWSSelection() {
+      if (wsCurrentPath.length < 3) return;
+      const forwardStr = wsCurrentPath.map(([r, c]) => appState.wordSearch.grid[r][c]).join('');
+      const reverseStr = forwardStr.split('').reverse().join('');
+
+      const matched = WS_WORDS.find(w => w.word === forwardStr || w.word === reverseStr);
+      if (!matched) return;
+
+      const alreadyFound = appState.wordSearch.foundWords.some(f => f.word === matched.word);
+      if (alreadyFound) {
+        showWSFact(matched.word);
+        return;
+      }
+
+      appState.wordSearch.foundWords.push({
+        word: matched.word,
+        coords: [...wsCurrentPath]
+      });
+      appState.wordSearch.lastFactWord = matched.word;
+      saveState(true);
+      renderWordSearch();
+      updateAllScoresAndReport();
+      showToast(`Istilah "${matched.word}" ditemukan!`, '🎉');
+    }
+
+    function showWSFact(word) {
+      const obj = WS_WORDS.find(w => w.word === word);
+      if (!obj) return;
+      document.getElementById('ws-fact-title').textContent = `Fakta Lab: ${obj.word}`;
+      document.getElementById('ws-fact-body').textContent = obj.fact;
+    }
+
+    function resetLevel3() {
+      appState.wordSearch = {
+        grid: generateWordSearchGrid(),
+        foundWords: [],
+        lastFactWord: null
+      };
+      saveState(false);
+      document.getElementById('ws-fact-title').textContent = 'Kartu Fakta Laboratorium';
+      document.getElementById('ws-fact-body').textContent = 'Temukan salah satu istilah pada papan huruf 14×14 di samping untuk membuka penjelasan konsep dan penerapannya di laboratorium!';
+      renderWordSearch();
+      updateAllScoresAndReport();
+      showToast('Papan Cari Kata diacak ulang', '🔄');
+    }
+
+    // =========================================================================
+    // 11. RENDER & LOGIKA LEVEL 4: ESAI HOTS & NLP AUTO-GRADER (30 POIN)
+    // =========================================================================
+    function renderEssaySection() {
+      const container = document.getElementById('essay-container');
+      const filtered = ESSAY_DATA.filter(item => appState.moduleFilter === 'all' || item.module === appState.moduleFilter);
+
+      container.innerHTML = filtered.map(item => {
+        const gradeObj = appState.essay.gradedResults ? appState.essay.gradedResults.questions[item.id] : null;
+
+        let inputAreaHtml = '';
+        if (item.isStructuredSOP) {
+          const sopVal = appState.essay.responses[item.id] || {};
+          inputAreaHtml = `
+            <div class="space-y-3 mt-4">
+              ${item.subFields.map(sf => `
+                <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200">
+                  <label class="block text-xs font-extrabold text-slate-800 mb-1.5">${sf.label}</label>
+                  <textarea rows="2"
+                    oninput="updateSOPField('${item.id}', '${sf.key}', this.value)"
+                    placeholder="${sf.placeholder}"
+                    class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500">${sopVal[sf.key] || ''}</textarea>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          const val = appState.essay.responses[item.id] || '';
+          inputAreaHtml = `
+            <textarea rows="4"
+              oninput="updateEssayField('${item.id}', this.value)"
+              placeholder="${item.placeholder}"
+              class="mt-4 w-full rounded-xl border border-slate-300 bg-slate-50 focus:bg-white px-3.5 py-3 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500">${val}</textarea>
+          `;
+        }
+
+        let feedbackHtml = '';
+        if (gradeObj) {
+          feedbackHtml = `
+            <div class="mt-4 p-4 rounded-xl bg-purple-50/70 border border-purple-200">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-purple-900">Hasil Pemindaian Korektor Otomatis</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-purple-700 text-white">
+                  Skor: ${gradeObj.score.toFixed(2)} / ${item.maxScore.toFixed(1)}
+                </span>
+              </div>
+              <ul class="space-y-1.5 text-xs">
+                ${gradeObj.checklist.map(c => `
+                  <li class="flex items-start gap-2 ${c.met ? 'text-emerald-800 font-semibold' : 'text-rose-700'}">
+                    <span>${c.met ? '✅' : '❌'}</span>
+                    <span>${c.label}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          `;
+        }
+
+        return `
+          <article class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-xs font-extrabold">${item.number}</span>
+                <span class="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-900 text-xs font-bold">${item.level}</span>
+              </div>
+              <span class="text-xs font-bold text-slate-500">Bobot Maksimal: ${item.maxScore.toFixed(1)} poin</span>
+            </div>
+            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 mt-1">${item.title}</h3>
+            <p class="text-xs sm:text-sm text-slate-700 whitespace-pre-line leading-relaxed mt-2">${item.prompt}</p>
+            ${inputAreaHtml}
+            ${feedbackHtml}
+          </article>
+        `;
+      }).join('');
+
+      // Render Kunci & Rubrik Guru
+      const rubricContainer = document.getElementById('teacher-rubric-content');
+      rubricContainer.innerHTML = ESSAY_DATA.map(item => `
+        <div class="bg-white rounded-xl p-4 border border-amber-200">
+          <div class="font-extrabold text-amber-950">${item.number} — ${item.title} (Maks. ${item.maxScore.toFixed(1)} poin)</div>
+          <p class="mt-1.5 whitespace-pre-line text-slate-700 leading-relaxed">${item.modelAnswer}</p>
+        </div>
+      `).join('');
+    }
+
+    function updateEssayField(id, value) {
+      appState.essay.responses[id] = value;
+      saveState(false);
+    }
+
+    function updateSOPField(id, key, value) {
+      if (!appState.essay.responses[id] || typeof appState.essay.responses[id] !== 'object') {
+        appState.essay.responses[id] = {};
+      }
+      appState.essay.responses[id][key] = value;
+      saveState(false);
+    }
+
+    function toggleTeacherRubric() {
+      const box = document.getElementById('teacher-rubric-box');
+      box.classList.toggle('hidden');
+    }
+
+    function gradeLevel4(notify = false) {
+      const questions = {};
+      let totalScore = 0;
+      let totalMet = 0;
+      let totalIndicators = 0;
+
+      ESSAY_DATA.forEach(item => {
+        let combinedText = '';
+        if (item.isStructuredSOP) {
+          const obj = appState.essay.responses[item.id] || {};
+          combinedText = Object.values(obj).join(' ').toLowerCase();
+        } else {
+          combinedText = (appState.essay.responses[item.id] || '').toLowerCase();
+        }
+
+        let qScore = 0;
+        const checklist = item.indicators.map((ind, idx) => {
+          totalIndicators++;
+          let scope = combinedText;
+          if (item.isStructuredSOP) {
+            const sopObj = appState.essay.responses[item.id] || {};
+            const keys = ['tools', 'formulation', 'molding', 'testing', 'conclusion'];
+            const fieldText = (sopObj[keys[idx]] || '').toLowerCase();
+            scope = fieldText.length > 0 ? fieldText : combinedText;
+          }
+
+          const met = scope.trim().length >= 8 && ind.terms.some(t => scope.includes(t.toLowerCase()));
+          if (met) {
+            qScore += ind.weight;
+            totalMet++;
+          }
+          return { label: ind.label, met };
+        });
+
+        questions[item.id] = {
+          score: Number(qScore.toFixed(2)),
+          checklist
+        };
+        totalScore += qScore;
+      });
+
+      appState.essay.gradedResults = {
+        totalScore: Number(totalScore.toFixed(2)),
+        totalMet,
+        totalIndicators,
+        questions
+      };
+
+      saveState(notify);
+      renderEssaySection();
+      updateAllScoresAndReport();
+      if (notify) {
+        showToast(`Level 4 dikoreksi: ${totalScore.toFixed(1)} / 30 poin`, '🤖');
+      }
+    }
+
+    // =========================================================================
+    // 12. PERHITUNGAN SKOR OTOMATIS & RAPOR AKHIR (0-100 POIN)
+    // =========================================================================
+    function calculateAllScores() {
+      // Level 1 (30 poin: 12 soal × 2.5)
+      let mcqCorrect = 0;
+      let mcqAnswered = 0;
+      let microMCQCorrect = 0;
+      let bioMCQCorrect = 0;
+
+      MCQ_DATA.forEach(q => {
+        const ans = appState.mcqAnswers[q.id];
+        if (ans !== undefined) {
+          mcqAnswered++;
+          if (ans === q.correct) {
+            mcqCorrect++;
+            if (q.module === 'microscope') microMCQCorrect++;
+            if (q.module === 'bioplastic') bioMCQCorrect++;
+          }
+        }
+      });
+      const level1Score = Number((mcqCorrect * 2.5).toFixed(2));
+
+      // Level 2 (25 poin: Bag A 15 + Bag B 10)
+      const level2Score = Number((appState.dnd.aScore + appState.dnd.bScore).toFixed(2));
+
+      // Level 3 (15 poin: 12 kata × 1.25)
+      const wsCount = appState.wordSearch.foundWords.length;
+      const level3Score = Number((wsCount * 1.25).toFixed(2));
+
+      // Level 4 (30 poin: 4 soal × 7.5)
+      const level4Score = appState.essay.gradedResults ? appState.essay.gradedResults.totalScore : 0;
+
+      const grandTotal = Number(Math.min(100, level1Score + level2Score + level3Score + level4Score).toFixed(1));
+
+      // Estimasi pembagian 50:50 per modul
+      // Modul A (Mikroskop): 6 PG (15) + 6 kartu D&D (7.5) + 6 kata WS (7.5) + 2 esai e1,e2 (15) + 5 poin proporsional = 50
+      let microDndCorrect = 0;
+      let bioDndCorrect = 0;
+      if (appState.dnd.graded) {
+        DND_CARDS.forEach(c => {
+          if (appState.dnd.placements[c.id] === c.zone) {
+            if (c.zone === 'onion' || c.zone === 'adamhawa' || c.zone === 'artifact') microDndCorrect++;
+            else bioDndCorrect++;
+          }
+        });
+      }
+
+      const microWords = ['EPIDERMIS', 'KLOROPLAS', 'STOMATA', 'ANTOSIANIN', 'MIKROMETER', 'PREPARAT'];
+      const foundSet = new Set(appState.wordSearch.foundWords.map(f => f.word));
+      let microWS = 0;
+      let bioWS = 0;
+      WS_WORDS.forEach(w => {
+        if (foundSet.has(w.word)) {
+          if (microWords.includes(w.word)) microWS++;
+          else bioWS++;
+        }
+      });
+
+      const qRes = appState.essay.gradedResults ? appState.essay.gradedResults.questions : null;
+      const microEssay = qRes ? (qRes.e1.score + qRes.e2.score) : 0;
+      const bioEssay = qRes ? (qRes.e3.score + qRes.e4.score) : 0;
+
+      const microDomainScore = Number(Math.min(50, (microMCQCorrect * 2.5) + ((microDndCorrect / 9) * 12.5) + (microWS * 1.25) + microEssay).toFixed(1));
+      const bioDomainScore = Number(Math.min(50, (bioMCQCorrect * 2.5) + ((bioDndCorrect / 3) * 2.5) + appState.dnd.bScore + (bioWS * 1.25) + bioEssay).toFixed(1));
+
+      // Persentase progres aktivitas
+      const dndPlaced = Object.keys(appState.dnd.placements).length;
+      const essayFilled = ['e1', 'e2', 'e3'].filter(id => (appState.essay.responses[id] || '').trim().length > 5).length +
+        (Object.values(appState.essay.responses.e4 || {}).some(v => v.trim().length > 5) ? 1 : 0);
+
+      const progressRatio = ((mcqAnswered / 12) * 0.30) + ((dndPlaced / 12) * 0.25) + ((wsCount / 12) * 0.15) + ((essayFilled / 4) * 0.30);
+      const progressPercent = Math.round(progressRatio * 100);
+
+      return {
+        mcqCorrect,
+        mcqAnswered,
+        mcqTotalCount: MCQ_DATA.length,
+        level1Score,
+        level2Score,
+        wsCount,
+        level3Score,
+        level4Score,
+        grandTotal,
+        microDomainScore,
+        bioDomainScore,
+        progressPercent
+      };
+    }
+
+    function getGradeInfo(score) {
+      if (score >= 88) return { letter: 'A', label: 'Sangat Mahir (Istimewa)', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+      if (score >= 75) return { letter: 'B', label: 'Mahir (Baik)', color: 'bg-teal-100 text-teal-800 border-teal-300' };
+      if (score >= 60) return { letter: 'C', label: 'Cukup Berkembang', color: 'bg-amber-100 text-amber-800 border-amber-300' };
+      return { letter: 'D', label: 'Perlu Pendampingan', color: 'bg-rose-100 text-rose-800 border-rose-300' };
+    }
+
+    function updateAllScoresAndReport() {
+      const s = calculateAllScores();
+      const grade = getGradeInfo(s.grandTotal);
+
+      // Header & Badges
+      document.getElementById('header-total-score').textContent = s.grandTotal.toFixed(1);
+      document.getElementById('header-progress-bar').style.width = `${s.progressPercent}%`;
+      document.getElementById('header-progress-text').textContent = `${s.progressPercent}%`;
+
+      document.getElementById('badge-l1').textContent = `${s.level1Score.toFixed(0)}/30`;
+      document.getElementById('badge-l2').textContent = `${s.level2Score.toFixed(0)}/25`;
+      document.getElementById('badge-l3').textContent = `${s.level3Score.toFixed(0)}/15`;
+      document.getElementById('badge-l4').textContent = `${s.level4Score.toFixed(0)}/30`;
+      document.getElementById('badge-total').textContent = s.grandTotal.toFixed(1);
+
+      // Kartu Nilai Akhir Level 1
+      document.getElementById('l1-correct-count').textContent = s.mcqCorrect;
+      document.getElementById('l1-total-count').textContent = s.mcqTotalCount;
+      document.getElementById('l1-score-display').textContent = s.level1Score.toFixed(1);
+      document.getElementById('l1-status-text').textContent = s.mcqAnswered === 12
+        ? `Seluruh 12 soal telah dijawab (${s.mcqCorrect} benar, ${12 - s.mcqCorrect} perlu ditinjau).`
+        : `Kamu telah menjawab ${s.mcqAnswered} dari 12 soal Pilihan Ganda HOTS.`;
+
+      // Kartu Nilai Akhir Level 2
+      document.getElementById('l2-part-a').textContent = appState.dnd.aScore.toFixed(1);
+      document.getElementById('l2-part-b').textContent = appState.dnd.bScore.toFixed(1);
+      document.getElementById('l2-score-display').textContent = s.level2Score.toFixed(1);
+      if (appState.dnd.graded) {
+        document.getElementById('l2-feedback-text').textContent = `Koreksi selesai: Bagian A (${appState.dnd.aScore.toFixed(1)}/15) dan Bagian B (${appState.dnd.bScore.toFixed(1)}/10).`;
+      }
+
+      // Kartu Nilai Akhir Level 3
+      document.getElementById('l3-found-display').textContent = s.wsCount;
+      document.getElementById('l3-score-display').textContent = s.level3Score.toFixed(1);
+
+      // Kartu Nilai Akhir Level 4
+      if (appState.essay.gradedResults) {
+        document.getElementById('l4-indicators-met').textContent = appState.essay.gradedResults.totalMet;
+        document.getElementById('l4-indicators-total').textContent = appState.essay.gradedResults.totalIndicators;
+        document.getElementById('l4-score-display').textContent = s.level4Score.toFixed(1);
+        document.getElementById('l4-status-text').textContent = `Pemindaian konsep selesai: ${appState.essay.gradedResults.totalMet} dari ${appState.essay.gradedResults.totalIndicators} indikator HOTS terpenuhi.`;
+      } else {
+        document.getElementById('l4-score-display').textContent = '0.0';
+      }
+
+      // Rapor Akhir
+      document.getElementById('rep-name').textContent = appState.student.name || '(Belum diisi)';
+      document.getElementById('rep-class').textContent = appState.student.className || '7A';
+      document.getElementById('rep-group').textContent = appState.student.group || '-';
+      document.getElementById('rep-role').textContent = appState.student.role || 'Project Leader';
+
+      document.getElementById('rep-grand-total').textContent = s.grandTotal.toFixed(1);
+      const badgeEl = document.getElementById('rep-grade-badge');
+      badgeEl.textContent = grade.letter;
+      badgeEl.className = `w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-black border-2 ${grade.color}`;
+      document.getElementById('rep-grade-label').textContent = grade.label;
+
+      document.getElementById('rep-l1-val').textContent = s.level1Score.toFixed(1);
+      document.getElementById('rep-l1-bar').style.width = `${(s.level1Score / 30) * 100}%`;
+
+      document.getElementById('rep-l2-val').textContent = s.level2Score.toFixed(1);
+      document.getElementById('rep-l2-bar').style.width = `${(s.level2Score / 25) * 100}%`;
+
+      document.getElementById('rep-l3-val').textContent = s.level3Score.toFixed(1);
+      document.getElementById('rep-l3-bar').style.width = `${(s.level3Score / 15) * 100}%`;
+
+      document.getElementById('rep-l4-val').textContent = s.level4Score.toFixed(1);
+      document.getElementById('rep-l4-bar').style.width = `${(s.level4Score / 30) * 100}%`;
+
+      document.getElementById('rep-mod-micro').textContent = s.microDomainScore.toFixed(1);
+      document.getElementById('rep-mod-micro-bar').style.width = `${(s.microDomainScore / 50) * 100}%`;
+
+      document.getElementById('rep-mod-bio').textContent = s.bioDomainScore.toFixed(1);
+      document.getElementById('rep-mod-bio-bar').style.width = `${(s.bioDomainScore / 50) * 100}%`;
+
+      const diagBox = document.getElementById('rep-diagnostic-box');
+      if (s.grandTotal >= 75) {
+        diagBox.innerHTML = `<strong>Catatan Diagnostik:</strong> Praktikan menunjukkan penguasaan sangat baik dalam menganalisis struktur sel tumbuhan di bawah mikroskop serta mengevaluasi formulasi bioplastik <em>edible pack</em> yang aman dikonsumsi.`;
+      } else if (s.grandTotal >= 50) {
+        diagBox.innerHTML = `<strong>Catatan Diagnostik:</strong> Pemahaman dasar praktikum sudah terbentuk. Pastikan kamu sudah menekan tombol <em>Koreksi Otomatis</em> pada Level 2 dan Level 4 serta melengkapi seluruh indikator uraian.`;
+      } else {
+        diagBox.innerHTML = `<strong>Catatan Diagnostik:</strong> Selesaikan seluruh aktivitas pada Level 1 sampai Level 4 dan jalankan korektor otomatis di setiap level untuk melihat nilai akhir secara lengkap.`;
+      }
+    }
+
+    function copyReportSummary() {
+      const s = calculateAllScores();
+      const grade = getGradeInfo(s.grandTotal);
+      const sop = appState.essay.responses.e4 || {};
+      const qGrades = appState.essay.gradedResults ? appState.essay.gradedResults.questions : null;
+
+      const text = [
+        '=== RAPOR NILAI OTOMATIS SCIENCE WORKSHOP KELAS 7 ===',
+        'Materi: Pengamatan Sel Tumbuhan & Bioplastik Edible Pack',
+        `Nama Praktikan  : ${appState.student.name || '-'}`,
+        `Kelas / Kelompok: ${appState.student.className || '-'} / ${appState.student.group || '-'}`,
+        `Peran Workshop  : ${appState.student.role || '-'}`,
+        '',
+        '[RINCIAN NILAI PER LEVEL]',
+        `- Level 1 (Pilihan Ganda HOTS) : ${s.level1Score.toFixed(1)} / 30 (${s.mcqCorrect}/12 benar)`,
+        `- Level 2 (Drag & Drop Lab)    : ${s.level2Score.toFixed(1)} / 25 (Bag. A: ${appState.dnd.aScore.toFixed(1)}/15, Bag. B: ${appState.dnd.bScore.toFixed(1)}/10)`,
+        `- Level 3 (Cari Kata 14x14)    : ${s.level3Score.toFixed(1)} / 15 (${s.wsCount}/12 istilah)`,
+        `- Level 4 (Esai & Kreasi SOP)  : ${s.level4Score.toFixed(1)} / 30`,
+        '--------------------------------------------------------',
+        `NILAI AKHIR TOTAL : ${s.grandTotal.toFixed(1)} / 100 (Predikat ${grade.letter} - ${grade.label})`,
+        '',
+        '[JAWABAN ESAI & KREASI SOP LEVEL 4]',
+        `No. 13 (${qGrades ? qGrades.e1.score.toFixed(1) : '0.0'}/7.5): ${appState.essay.responses.e1 || '(Kosong)'}`,
+        `No. 14 (${qGrades ? qGrades.e2.score.toFixed(1) : '0.0'}/7.5): ${appState.essay.responses.e2 || '(Kosong)'}`,
+        `No. 15 (${qGrades ? qGrades.e3.score.toFixed(1) : '0.0'}/7.5): ${appState.essay.responses.e3 || '(Kosong)'}`,
+        `No. 16 Kreasi SOP Edible Pack (${qGrades ? qGrades.e4.score.toFixed(1) : '0.0'}/7.5):`,
+        `  1. Alat & Bahan Food-Grade : ${sop.tools || '-'}`,
+        `  2. Formulasi & Rasio       : ${sop.formulation || '-'}`,
+        `  3. Pemasakan & Pencetakan  : ${sop.molding || '-'}`,
+        `  4. Uji Kualitas & Food-Grade: ${sop.testing || '-'}`,
+        `  5. Penyajian Kesimpulan    : ${sop.conclusion || '-'}`
+      ].join('\n');
+
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('Laporan hasil berhasil disalin ke clipboard!', '📋');
+    }
+
+    function resetAllData() {
+      localStorage.removeItem(STORAGE_KEY);
+      appState = getInitialState();
+      initIdentityInputs();
+      setModuleFilter('all');
+      renderMCQ();
+      renderLevel2();
+      renderWordSearch();
+      renderEssaySection();
+      updateAllScoresAndReport();
+      switchTab('level1');
+      showToast('Seluruh data ujian telah direset bersih', '🗑️');
+    }
+
+    // =========================================================================
+    // 13. INISIALISASI APLIKASI SAAT HALAMAN DIMUAT
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      initIdentityInputs();
+      setModuleFilter(appState.moduleFilter || 'all');
+      renderMCQ();
+      renderLevel2();
+      renderWordSearch();
+      renderEssaySection();
+      updateAllScoresAndReport();
+      switchTab(appState.activeTab || 'level1');
+    });
+  </script>
+</body>
+</html>
